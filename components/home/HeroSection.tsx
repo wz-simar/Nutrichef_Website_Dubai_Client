@@ -34,7 +34,7 @@ export const HeroSection = () => {
       />
       <Image
         src={HERO_BACKGROUND_DESKTOP}
-        alt={HERO_ALT}
+        alt=""
         fill
         priority
         sizes="100vw"
