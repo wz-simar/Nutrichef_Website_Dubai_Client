@@ -231,7 +231,7 @@ export const MenuPreview = () => {
                       />
                     </div>
                     <div className="px-2 pb-3 pt-4">
-                      <h3 className="font-heading text-lg font-semibold leading-snug text-foreground">
+                      <h3 className="font-heading truncate text-lg font-semibold leading-snug text-foreground">
                         {meal.title}
                       </h3>
                       <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">

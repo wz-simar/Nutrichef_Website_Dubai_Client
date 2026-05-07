@@ -2,6 +2,7 @@
 
 import React, { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { NutrichefLogo } from "@/components/NutrichefLogo";
 import { MenuOverlay } from "./MenuOverlay";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +17,8 @@ const navLinks = [
 const LG = "(min-width: 1024px)";
 
 const DRAWER_TOP = "calc(env(safe-area-inset-top, 0px) + 4.25rem)";
+
+const NAVBAR_HEIGHT_PX = 68;
 
 /** One instance per mount: the same JSX was rendered twice (lg / not-lg) with a shared ref, so `ref` only attached to one hidden node and outside-click closed the visible menu before `click` fired — logout never ran. */
 function NavbarUserMenu() {
@@ -115,8 +118,10 @@ function NavbarUserMenu() {
 export const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [fullMenuOpen, setFullMenuOpen] = useState(false);
+  const [overHero, setOverHero] = useState(false);
   const panelCloseRef = useRef<HTMLButtonElement>(null);
   const menuId = useId();
+  const pathname = usePathname();
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -147,6 +152,41 @@ export const Navbar = () => {
       window.removeEventListener("keydown", onKey);
     };
   }, [open]);
+
+  /**
+   * Track whether the navbar currently sits above a hero section (e.g. on the
+   * homepage). Pages without `#hero` always render the solid navbar. We use a
+   * scroll listener with `getBoundingClientRect` so we can react the moment
+   * the hero scrolls past the navbar — which lines up with the user reaching
+   * the "Discover our daily-changing menu" section that follows it.
+   */
+  useEffect(() => {
+    let frame = 0;
+
+    const evaluate = () => {
+      const hero = document.getElementById("hero");
+      if (!hero) {
+        setOverHero(false);
+        return;
+      }
+      const rect = hero.getBoundingClientRect();
+      setOverHero(rect.bottom > NAVBAR_HEIGHT_PX);
+    };
+
+    frame = window.requestAnimationFrame(evaluate);
+
+    const onScroll = () => evaluate();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [pathname]);
+
+  const transparent = overHero && !open;
 
   return (
     <header className="fixed top-0 z-50 w-full pt-[env(safe-area-inset-top,0px)]">
@@ -232,9 +272,11 @@ export const Navbar = () => {
       ) : null}
 
       <nav
-        className={`relative z-[70] border-b border-border-subtle bg-background transition-shadow duration-300 ${
-          open ? "shadow-sm" : ""
-        }`}
+        className={`relative z-[70] transition-[background-color,border-color,box-shadow] duration-300 ${
+          transparent
+            ? "border-b border-transparent bg-transparent"
+            : "border-b border-border-subtle bg-background"
+        } ${open && !transparent ? "shadow-sm" : ""}`}
         aria-label="Main"
       >
         <div className="mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between gap-3 px-5 sm:px-8 lg:gap-4 lg:px-10">
@@ -254,7 +296,11 @@ export const Navbar = () => {
               <Link
                 key={href}
                 href={href}
-                className="rounded-full px-3 py-2 text-sm font-medium text-foreground/65 transition hover:bg-bg-light hover:text-foreground"
+                className={`rounded-full px-3 py-2 text-sm font-medium transition ${
+                  transparent
+                    ? "text-white/85 hover:bg-white/10 hover:text-white"
+                    : "text-foreground/65 hover:bg-bg-light hover:text-foreground"
+                }`}
               >
                 {label}
               </Link>
@@ -274,7 +320,11 @@ export const Navbar = () => {
             <NavbarUserMenu />
             <button
               type="button"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-bg-light text-foreground transition hover:bg-bg-light/80"
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition ${
+                transparent
+                  ? "bg-white/15 text-white backdrop-blur hover:bg-white/25"
+                  : "bg-bg-light text-foreground hover:bg-bg-light/80"
+              }`}
               aria-expanded={open}
               aria-controls={open ? menuId : undefined}
               aria-label={open ? "Close menu" : "Open menu"}
