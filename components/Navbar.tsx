@@ -28,11 +28,11 @@ function NavbarUserMenu() {
 
   const initials = user?.name
     ? user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
     : "U";
 
   useEffect(() => {
@@ -272,11 +272,10 @@ export const Navbar = () => {
       ) : null}
 
       <nav
-        className={`relative z-[70] transition-[background-color,border-color,box-shadow] duration-300 ${
-          transparent
+        className={`relative z-[70] transition-[background-color,border-color,box-shadow] duration-300 ${transparent
             ? "border-b border-transparent bg-transparent"
             : "border-b border-border-subtle bg-background"
-        } ${open && !transparent ? "shadow-sm" : ""}`}
+          } ${open && !transparent ? "shadow-sm" : ""}`}
         aria-label="Main"
       >
         <div className="mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between gap-3 px-5 sm:px-8 lg:gap-4 lg:px-10">
@@ -296,11 +295,10 @@ export const Navbar = () => {
               <Link
                 key={href}
                 href={href}
-                className={`rounded-full px-3 py-2 text-sm font-medium transition ${
-                  transparent
+                className={`rounded-full px-3 py-2 text-sm font-medium transition ${transparent
                     ? "text-white/85 hover:bg-white/10 hover:text-white"
                     : "text-foreground/65 hover:bg-bg-light hover:text-foreground"
-                }`}
+                  }`}
               >
                 {label}
               </Link>
@@ -320,11 +318,10 @@ export const Navbar = () => {
             <NavbarUserMenu />
             <button
               type="button"
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition ${
-                transparent
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition ${transparent
                   ? "bg-white/15 text-white backdrop-blur hover:bg-white/25"
                   : "bg-bg-light text-foreground hover:bg-bg-light/80"
-              }`}
+                }`}
               aria-expanded={open}
               aria-controls={open ? menuId : undefined}
               aria-label={open ? "Close menu" : "Open menu"}
