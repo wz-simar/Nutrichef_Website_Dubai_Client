@@ -5,6 +5,9 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TenantProvider } from "@/contexts/TenantContext";
+import { OrganizationSchema } from "@/components/OrganizationSchema";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { defaultSiteMetadata } from "@/lib/metadata";
 
 const fontUi = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -19,9 +22,7 @@ const fontDisplay = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Nutrichef",
-  description:
-    "Nutrichef provides meal plans tailored for busy people. It serves delicious food that's portioned to your requirements and fitness goals. You can choose your meals from the daily menu or build your own.",
+  ...defaultSiteMetadata,
   icons: {
     icon: [
       { url: "/fav/favicon-32x32.png", sizes: "32x32", type: "image/png" },
@@ -52,11 +53,13 @@ export default function RootLayout({
       <body
         className={`${fontUi.className} flex min-h-screen flex-col antialiased bg-background text-foreground`}
       >
+        <OrganizationSchema />
         <AuthProvider>
           <TenantProvider>
             <Navbar />
             <main className="flex-grow">{children}</main>
             <Footer />
+            <WhatsAppButton />
           </TenantProvider>
         </AuthProvider>
       </body>

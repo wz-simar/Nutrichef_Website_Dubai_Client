@@ -329,12 +329,13 @@ export function WeightDialScrollPicker({
           <div className="relative isolate h-[60px] w-full shrink-0 overflow-hidden border-b border-border-subtle/60">
             <Image
               src={WEIGHT_FRAME_SRC}
-              alt=""
+              alt="Decorative weight selector frame"
               fill
               className="pointer-events-none select-none object-cover object-top"
               sizes="330px"
               draggable={false}
               priority={false}
+              aria-hidden
             />
           </div>
           <div

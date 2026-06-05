@@ -3,18 +3,14 @@
 import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "../Button";
+import { DELIVERY_ZONES_TEXT } from "@/lib/site-config";
 
 const HERO_BACKGROUND_DESKTOP = "/complete_background.png";
 const HERO_BACKGROUND_MOBILE = "/complete_background_mobile.png";
 const HERO_ALT =
   "Nutrichef chef presenting freshly prepared meals with the Dubai skyline in the background";
-
-function scrollToMenu() {
-  document
-    .getElementById("menu")
-    ?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
 
 export const HeroSection = () => {
   const router = useRouter();
@@ -34,12 +30,11 @@ export const HeroSection = () => {
       />
       <Image
         src={HERO_BACKGROUND_DESKTOP}
-        alt=""
+        alt={HERO_ALT}
         fill
         priority
         sizes="100vw"
         className="-z-20 hidden object-cover object-center sm:block"
-        aria-hidden
       />
       <div
         className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-black/65 via-black/35 to-black/55 sm:bg-gradient-to-r sm:from-black/70 sm:via-black/30 sm:to-transparent"
@@ -56,13 +51,22 @@ export const HeroSection = () => {
             Fresh daily · Heat &amp; eat
           </p>
           <h1 className="font-heading text-[2.65rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-5xl lg:text-[3.25rem] xl:text-[3.75rem]">
-            Healthy Meals
+            Fresh Healthy
             <br />
-            <span className="text-primary">To Gain Muscle</span>
+            Meal Plans
+            <br />
+            <span className="text-primary">
+              Delivered Daily
+              <br />
+              in Dubai
+            </span>
           </h1>
           <p className="mt-6 max-w-md text-lg leading-relaxed text-white/85 sm:text-xl">
             Designed by nutritionists, crafted by chefs, personalized to your
             goals. Fresh daily. Just heat and eat.
+          </p>
+          <p className="mt-4 inline-flex items-center rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur-sm">
+            {DELIVERY_ZONES_TEXT}
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <Button
@@ -72,13 +76,12 @@ export const HeroSection = () => {
             >
               See plans
             </Button>
-            <button
-              type="button"
-              onClick={scrollToMenu}
+            <Link
+              href="/menu"
               className="text-sm font-semibold text-white/85 underline-offset-4 transition hover:text-white hover:underline"
             >
               Browse menu
-            </button>
+            </Link>
           </div>
           <dl className="mt-14 grid max-w-lg gap-6 border-t border-white/20 pt-10 sm:grid-cols-2 sm:gap-8">
             <div>
