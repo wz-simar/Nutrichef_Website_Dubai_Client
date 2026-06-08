@@ -47,6 +47,9 @@ export function buildPageMetadata({
 
 export const defaultSiteMetadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  verification: {
+    google: "xEj8gfifSHw6DNTN76uH_Wl-gWiSu7OnaPEIzah_qW8",
+  },
   title: {
     default: HOME_META.title,
     template: `%s | ${SITE_NAME}`,
