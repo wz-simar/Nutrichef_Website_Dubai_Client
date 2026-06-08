@@ -3,6 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { caloBlogImage } from '@/lib/calo-images';
 import { Button } from '../Button';
 
 const steps = [
@@ -10,19 +11,19 @@ const steps = [
         id: 1,
         title: 'Find your perfect meal plan',
         description: 'We create your menu around your lifestyle, goals, and favorite foods.',
-        image: 'https://api-blog.calo.app/wp-content/uploads/2025/10/imaghe-37.webp' 
+        image: caloBlogImage('imaghe-37.webp'),
     },
     {
         id: 2,
         title: 'You choose, we cook',
         description: "Pick your favorite dishes, and we'll prepare them fresh and flavorful to fit your needs and schedule.",
-        image: 'https://api-blog.calo.app/wp-content/uploads/2025/10/imaghe-9-1.webp'
+        image: caloBlogImage('imaghe-9-1.webp'),
     },
     {
         id: 3,
         title: 'Enjoy daily fresh deliveries',
         description: 'We deliver fresh meals every day. Just heat, eat and enjoy.',
-        image: 'https://api-blog.calo.app/wp-content/uploads/2025/10/imaghe-7.webp'
+        image: caloBlogImage('imaghe-7.webp'),
     }
 ];
 

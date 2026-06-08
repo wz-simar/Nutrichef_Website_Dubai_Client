@@ -8,10 +8,11 @@ import { MenuOverlay } from "./MenuOverlay";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navLinks = [
-  { href: "/#menu", label: "Menu" },
-  { href: "/#features", label: "Why us" },
-  { href: "/#community", label: "Community" },
-  { href: "/#faq", label: "FAQ" },
+  { href: "/menu", label: "Menu" },
+  { href: "/why-us", label: "Why us" },
+  { href: "/community", label: "Community" },
+  { href: "/faq", label: "FAQ" },
+  { href: "/contact-us", label: "Contact" },
 ] as const;
 
 const LG = "(min-width: 1024px)";
