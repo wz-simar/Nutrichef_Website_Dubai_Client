@@ -1,7 +1,7 @@
 /** Central site constants for SEO, contact, and social links. */
 
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://nutrichef.ae";
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://www.nutrichef.ae";
 
 export const SITE_NAME = "NutriChef";
 
