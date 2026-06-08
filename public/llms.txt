@@ -6,13 +6,13 @@ NutriChef is a UAE-based healthy meal plan delivery service offering 80+ rotatin
 
 ## Key pages
 
-- Homepage: https://nutrichef.ae/
-- Meal plans & pricing: https://nutrichef.ae/plans
-- Weekly menu: https://nutrichef.ae/menu
-- Why NutriChef: https://nutrichef.ae/why-us
-- Community: https://nutrichef.ae/community
-- FAQ: https://nutrichef.ae/faq
-- Contact: https://nutrichef.ae/contact-us
+- Homepage: https://www.nutrichef.ae/
+- Meal plans & pricing: https://www.nutrichef.ae/plans
+- Weekly menu: https://www.nutrichef.ae/menu
+- Why NutriChef: https://www.nutrichef.ae/why-us
+- Community: https://www.nutrichef.ae/community
+- FAQ: https://www.nutrichef.ae/faq
+- Contact: https://www.nutrichef.ae/contact-us
 
 ## Services
 
