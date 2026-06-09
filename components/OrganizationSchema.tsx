@@ -13,7 +13,7 @@ export function OrganizationSchema() {
     telephone: CONTACT.phoneTel,
     address: {
       "@type": "PostalAddress",
-      streetAddress: "Warehouse 12, Al Quoz Industrial Area 3",
+      streetAddress: "Al Safa park complex - Al Safa 1 - Al Safa",
       addressLocality: "Dubai",
       addressCountry: "AE",
     },

@@ -12,7 +12,7 @@ export const CONTACT = {
   phoneTel: "+97141234567",
   whatsapp: "+971501234567",
   email: "hello@nutrichef.ae",
-  address: "Warehouse 12, Al Quoz Industrial Area 3, Dubai, United Arab Emirates",
+  address: "Al Safa park complex - Al Safa 1 - Al Safa - Dubai - United Arab Emirates",
   addressShort: "Dubai, United Arab Emirates",
 } as const;
 
@@ -24,7 +24,7 @@ export const SOCIAL_LINKS = {
 } as const;
 
 export const GOOGLE_MAPS_EMBED_URL =
-  "https://maps.google.com/maps?q=Business+Bay,+Dubai,+UAE&t=&z=13&ie=UTF8&iwloc=&output=embed";
+  "https://maps.google.com/maps?q=Al+Safa+park+complex,+Al+Safa+1,+Dubai,+UAE&t=&z=13&ie=UTF8&iwloc=&output=embed";
 
 export const DELIVERY_ZONES_TEXT =
   "We deliver to Dubai, Abu Dhabi, Sharjah";
