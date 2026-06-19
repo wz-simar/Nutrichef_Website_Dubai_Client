@@ -261,7 +261,7 @@ export const MenuPreview = () => {
             type="button"
             variant="onDark"
             size="lg"
-            onClick={() => router.push("/menu")}
+            onClick={() => router.push("https://qr.emenu.ae/nutrichef/#/en/home")}
           >
             See full menu
           </Button>
