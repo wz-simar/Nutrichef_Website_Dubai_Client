@@ -17,6 +17,10 @@ const helpLinks = [
   { href: "/contact-us", label: "Contact us" },
 ] as const;
 
+const otherPageLinks = [
+  { href: "/healthy-meal-delivery-dubai", label: "Healthy Meal Delivery Dubai" },
+] as const;
+
 export const Footer = () => {
   const whatsappHref = `https://wa.me/${CONTACT.whatsapp.replace(/\D/g, "")}`;
 
@@ -46,7 +50,7 @@ export const Footer = () => {
             </div>
           </div>
 
-          <div className="grid gap-10 sm:grid-cols-2 lg:col-span-4">
+          <div className="grid gap-10 sm:grid-cols-2 lg:col-span-4 lg:grid-cols-3">
             <div>
               <h3 className="font-heading mb-5 text-sm font-semibold uppercase tracking-[0.2em] text-background/50">
                 Company
@@ -70,6 +74,23 @@ export const Footer = () => {
               </h3>
               <ul className="space-y-3 text-sm">
                 {helpLinks.map(({ href, label }) => (
+                  <li key={label}>
+                    <Link
+                      href={href}
+                      className="text-background/75 transition hover:text-primary"
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-heading mb-5 text-sm font-semibold uppercase tracking-[0.2em] text-background/50">
+                Other Pages
+              </h3>
+              <ul className="space-y-3 text-sm">
+                {otherPageLinks.map(({ href, label }) => (
                   <li key={label}>
                     <Link
                       href={href}
