@@ -19,6 +19,10 @@ const helpLinks = [
 
 const otherPageLinks = [
   { href: "/healthy-meal-delivery-dubai", label: "Healthy Meal Delivery Dubai" },
+  {
+    href: "/blogs/Top-5-Healthy-Meal-Delivery-Services-in-Dubai",
+    label: "Top 5 Healthy Meal Delivery Dubai",
+  },
 ] as const;
 
 export const Footer = () => {

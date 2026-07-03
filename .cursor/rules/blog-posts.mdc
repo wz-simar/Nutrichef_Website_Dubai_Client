@@ -1,0 +1,81 @@
+---
+description: SOP for adding NutriChef blog posts — follow when user asks to add or create a blog
+globs: content/blogs/**,app/blogs/**,components/blog/**,lib/blog/**
+alwaysApply: false
+---
+
+# NutriChef Blog Post SOP
+
+When the user says **"add a blog"** (or similar), follow this checklist. Reference implementation: `content/blogs/top-5-healthy-meal-delivery-services-in-dubai.ts`.
+
+## 1. URL & slug
+
+- Public URL: `/blogs/{PascalCase-Slug}` (e.g. `/blogs/Top-5-Healthy-Meal-Delivery-Services-in-Dubai`)
+- `slug` in content must match the URL segment exactly
+- Kebab folder name for assets: `top-5-healthy-meal-delivery-services-in-dubai`
+
+## 2. Files to create/update
+
+| Step | File | Action |
+|------|------|--------|
+| 1 | `content/blogs/{kebab-slug}.ts` | Export `BlogPost` with all copy |
+| 2 | `public/blogs/{kebab-slug}/` | Store `.webp` images (one per major heading) |
+| 3 | `lib/blog/assets.ts` | Add asset path constants for the post |
+| 4 | `lib/blog/registry.ts` | Register the post in `BLOG_REGISTRY` |
+| 5 | `app/sitemap.ts` | Blog routes auto-included via registry (if wired) |
+
+No per-post `page.tsx` needed — `app/blogs/[slug]/page.tsx` renders all registered posts.
+
+## 3. SEO (required)
+
+- **H1**: `post.title` only (rendered in `BlogPostHero`) — never duplicate as a block
+- **H2**: major sections (`level: 2`, stable `id` for TOC anchors)
+- **H3**: subsections and FAQ questions (`level: 3`)
+- **Title tag**: `{title}` → becomes `{title} | NutriChef` via `buildPageMetadata`
+- **Meta description**: 150–160 chars, keyword + NutriChef hook
+- **Internal links**: use `richParagraph` → `/plans`, `/menu`, `/why-us`, `/contact-us`, `/healthy-meal-delivery-dubai`
+
+## 4. Hyperlinks from Word
+
+When SEO provides a `.docx` with hyperlinks:
+
+1. Place the file in `content/blogs/` (or `public/` temporarily)
+2. Extract anchors into `content/blogs/{kebab-slug}-links.ts`
+3. Set `linkAnchors` on the `BlogPost` — plain `paragraph` and `list` blocks auto-linkify via `lib/blog/linkify.ts`
+4. Match anchor text **exactly** to the Word doc phrase (e.g. `NutriChef's full pricing and plan options`)
+5. Internal `nutrichef.ae` URLs → relative paths; `/delivery` → `/healthy-meal-delivery-dubai`; `/account` → `/plans`
+6. External URLs open in a new tab
+
+## 5. Images
+
+- Place images in `public/blogs/{kebab-slug}/`
+- **Filename rule**: slugified version of the matching **H2 or H3 heading**
+- **Placement**: `image` block immediately after the heading it illustrates
+- **Hero/cover**: first image → `coverImage` on the post (maps to H1/title)
+- Use `.webp`, descriptive `alt`, optional `caption` matching the heading
+- Never use stock/Calo proxy images when custom blog assets exist
+- Infographic assets are **3:2 (1536×1024)** — render with `width`/`height` and `h-auto w-full`, not `object-cover` in a 16:9 box (that crops the top)
+
+## 6. Content blocks (`BlogBlock`)
+
+`paragraph` · `richParagraph` · `heading` · `list` · `table` · `image` · `callout` · `divider`
+
+## 7. Design consistency
+
+Reuse existing components only — do not invent new blog layouts:
+
+- `BlogPostHero`, `BlogPostLayout`, `BlogArticleBody`, `BlogCtaSection`, `BlogArticleSchema`
+- Brand tokens: `font-heading`, `text-primary`, `bg-bg-light`, `text-secondary-text`, `border-border-subtle`
+- CTA defaults: `buttonHref: "/plans"`, `buttonLabel: "See plans"`
+- Author default: Dr. Fatima Al Hashimi unless specified otherwise
+
+## 8. Before finishing
+
+- [ ] Post registered in `BLOG_REGISTRY`
+- [ ] Images load from `/blogs/{kebab-slug}/…`
+- [ ] H1 only in hero; H2/H3 hierarchy correct
+- [ ] Footer link added if marketing asks for it
+- [ ] `npx tsc --noEmit` passes
+- [ ] Page returns 200 at `/blogs/{slug}`
+
+Copy `content/blogs/_template.ts` as a starting point.

@@ -6,6 +6,15 @@ import type { NextConfig } from "next";
  * lib/api.ts forces same-origin /api-backend when NEXT_PUBLIC_API_BASE_URL is a cross-origin URL.
  */
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/blogs/Best-Healthy-Meal-Delivery-Services-in-Dubai",
+        destination: "/blogs/Top-5-Healthy-Meal-Delivery-Services-in-Dubai",
+        permanent: true,
+      },
+    ];
+  },
   images: {
     unoptimized: true,
     remotePatterns: [

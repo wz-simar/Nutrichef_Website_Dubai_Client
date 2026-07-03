@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { getAllBlogPosts } from "@/lib/blog/registry";
 import { fetchMealPlanTemplateIds } from "@/lib/fetchMealPlanTemplateIds";
 import { SITE_URL } from "@/lib/site-config";
 
@@ -24,6 +25,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority,
   }));
 
+  const blogEntries = getAllBlogPosts().map((post) => ({
+    url: `${SITE_URL}/blogs/${post.slug}`,
+    lastModified: new Date(post.updatedAt ?? post.publishedAt),
+    changeFrequency: "monthly" as const,
+    priority: 0.85,
+  }));
+
   const templateIds = await fetchMealPlanTemplateIds();
   const mealPlanEntries = templateIds.map((id) => ({
     url: `${SITE_URL}/meal-plans/${id}`,
@@ -32,5 +40,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.85,
   }));
 
-  return [...staticEntries, ...mealPlanEntries];
+  return [...staticEntries, ...blogEntries, ...mealPlanEntries];
 }
