@@ -88,6 +88,6 @@ export const TOP5_BLOG_LINKS = [
   { anchor: "Right Bite", url: "https://rightbite.com/" },
   { anchor: "Kcal Life", url: "https://kcallife.com/" },
   { anchor: "Calo", url: "https://calo.app/en-ae" },
-  { anchor: "WhatsApp", url: "https://wa.me/971501234567" },
+  { anchor: "WhatsApp", url: "https://wa.me/971585831374" },
   { anchor: "NutriChef", url: "https://www.nutrichef.ae/" },
 ] as const;

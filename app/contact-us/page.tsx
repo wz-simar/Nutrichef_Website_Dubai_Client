@@ -47,6 +47,14 @@ export default function ContactUsPage() {
               <ul className="mt-8 space-y-6 text-[0.9375rem] leading-relaxed text-secondary-text sm:text-base">
                 <li>
                   <span className="block text-xs font-semibold uppercase tracking-wider text-foreground/60">
+                    Contact
+                  </span>
+                  <p className="mt-1 font-semibold text-foreground">
+                    {CONTACT.name}
+                  </p>
+                </li>
+                <li>
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-foreground/60">
                     Phone
                   </span>
                   <a

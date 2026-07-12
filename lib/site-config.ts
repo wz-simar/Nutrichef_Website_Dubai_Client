@@ -11,9 +11,11 @@ export const SITE_TAGLINE = "Private-Chef Nutrition, Delivered";
 export const STARTING_PRICE_PER_DAY_AED = 99;
 
 export const CONTACT = {
-  phone: "+971 4 123 4567",
-  phoneTel: "+97141234567",
-  whatsapp: "+971501234567",
+  /** Registered contact entity for the brand. */
+  name: "MBR NutriChef Cafe",
+  phone: "+971 58 583 1374",
+  phoneTel: "+971585831374",
+  whatsapp: "+971585831374",
   email: "hello@nutrichef.ae",
   address: "Al Safa park complex - Al Safa 1 - Al Safa - Dubai - United Arab Emirates",
   addressShort: "Dubai, United Arab Emirates",

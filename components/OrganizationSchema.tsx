@@ -6,6 +6,7 @@ export function OrganizationSchema() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: SITE_NAME,
+    legalName: CONTACT.name,
     url: SITE_URL,
     logo: `${SITE_URL}/logo.jpg`,
     slogan: "Private-Chef Nutrition, Delivered",
