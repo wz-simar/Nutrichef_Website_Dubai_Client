@@ -5,6 +5,8 @@ import { FeaturesSection } from "@/components/home/FeaturesSection";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { CommunitySection } from "@/components/home/CommunitySection";
 import { MealPlansSection } from "@/components/home/MealPlansSection";
+import { MarketsSection } from "@/components/home/MarketsSection";
+import { SubscribeCTA } from "@/components/home/SubscribeCTA";
 import { FAQSection } from "@/components/home/FAQSection";
 import { InstagramFeed } from "@/components/home/InstagramFeed";
 import { NutritionistCredential } from "@/components/home/NutritionistCredential";
@@ -16,6 +18,16 @@ export const metadata: Metadata = buildPageMetadata({
   title: HOME_META.title,
   description: HOME_META.description,
   path: "/",
+  keywords: [
+    "private chef meal plans Dubai",
+    "luxury meal delivery UAE",
+    "executive meal plans Dubai",
+    "healthy meal delivery Dubai",
+    "meal plan delivery Abu Dhabi",
+    "premium meal subscription GCC",
+    "high protein meal delivery Dubai",
+    "keto meal plan UAE",
+  ],
 });
 
 export default function Home() {
@@ -26,8 +38,10 @@ export default function Home() {
       <FeaturesSection />
       <HowItWorks />
       <NutritionistCredential />
-      <CommunitySection />
       <MealPlansSection />
+      <CommunitySection />
+      <MarketsSection />
+      <SubscribeCTA />
       <FAQSection />
       <LocationSection />
       <InstagramFeed />

@@ -442,10 +442,14 @@ export default function PlansPage() {
         {/* Header */}
         <div className="mb-14">
           <h1 className="font-heading text-[34px] font-semibold leading-[1.05] tracking-tight text-foreground md:text-[44px]">
-            Customize Your
+            Built Around You.
             <br />
-            Perfect Meal Plan
+            Down to the Gram.
           </h1>
+          <p className="mt-4 max-w-xl text-[15px] font-medium leading-relaxed text-secondary-text">
+            Choose your programme, your meals, and your rhythm — our chefs and
+            nutritionist handle everything after checkout.
+          </p>
         </div>
 
         {/* Two Column Layout */}

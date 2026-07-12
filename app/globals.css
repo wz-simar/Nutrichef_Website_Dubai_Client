@@ -5,16 +5,20 @@ html {
 }
 
 :root {
-  /* Brand: forest wordmark + leaf accent (Nutrichef logo) */
-  --background: #fafaf8;
+  /* Brand: deep-emerald ink, warm ivory canvas, champagne-gold accent —
+     the "private members' club" register for the HNI audience. */
+  --background: #faf8f3;
   --surface: #ffffff;
-  --foreground: #1b3022;
-  --primary-brand: #7db146;
-  --primary-brand-hover: #689938;
-  --secondary-text: #4a5c52;
-  --light-bg: #eef2ed;
-  --accent-leaf-muted: #a3c978;
-  --border-subtle: rgba(27, 48, 34, 0.1);
+  --foreground: #12291c;
+  --primary-brand: #1c6b45;
+  --primary-brand-hover: #145234;
+  --secondary-text: #47584d;
+  --light-bg: #f0ede3;
+  --accent-leaf-muted: #8fb08a;
+  --accent-gold: #b8912e;
+  --accent-gold-soft: #e6d9b8;
+  --emerald-deep: #0d2117;
+  --border-subtle: rgba(18, 41, 28, 0.12);
 }
 
 @theme inline {
@@ -26,6 +30,9 @@ html {
   --color-text-secondary: var(--secondary-text);
   --color-bg-light: var(--light-bg);
   --color-accent-warm: var(--accent-leaf-muted);
+  --color-gold: var(--accent-gold);
+  --color-gold-soft: var(--accent-gold-soft);
+  --color-emerald-deep: var(--emerald-deep);
   --color-border-subtle: var(--border-subtle);
   --font-sans: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-display), ui-serif, Georgia, "Times New Roman", serif;

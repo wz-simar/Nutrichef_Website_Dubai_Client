@@ -7,12 +7,17 @@ import { LanguageSelect } from '@/components/LanguageSelect';
 
 const navLinks = [
     { name: 'Homepage', href: '/', hasChild: false },
-    { name: 'Plans & Packages', href: '/plans', hasChild: false },
-    { name: 'Menu', href: '/menu', hasChild: false },
+    { name: 'Design Your Plan', href: '/plans', hasChild: false },
+    { name: "This Week's Menu", href: '/menu', hasChild: false },
+    { name: 'Subscribe & Save', href: '/subscribe', hasChild: false },
     { name: 'Why us', href: '/why-us', hasChild: false },
-    { name: 'Community', href: '/community', hasChild: false },
+    { name: 'Client Stories', href: '/community', hasChild: false },
+    { name: '🇦🇪 United Arab Emirates', href: '/uae', hasChild: false },
+    { name: '🇸🇦 Saudi Arabia', href: '/saudi-arabia', hasChild: false },
+    { name: '🇶🇦 Qatar', href: '/qatar', hasChild: false },
+    { name: '🇰🇼 Kuwait', href: '/kuwait', hasChild: false },
     { name: 'FAQ', href: '/faq', hasChild: false },
-    { name: 'Contact us', href: '/contact-us', hasChild: false },
+    { name: 'Contact & Concierge', href: '/contact-us', hasChild: false },
 ];
 
 function useIsClient() {

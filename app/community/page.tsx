@@ -1,13 +1,20 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { CommunitySection } from "@/components/home/CommunitySection";
 import { InstagramFeed } from "@/components/home/InstagramFeed";
+import { SubscribeCTA } from "@/components/home/SubscribeCTA";
 import { buildPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Community — NutriChef Dubai Meal Plans",
+  title: "Client Stories — The NutriChef Community | Dubai & UAE",
   description:
-    "Real results, real stories from the NutriChef community across Dubai and the UAE. See how our customers hit their health and fitness goals.",
+    "Founders, executives, athletes, and families across Dubai and the UAE share their NutriChef results — real members of the private-chef meal plan trusted across the Emirates.",
   path: "/community",
+  keywords: [
+    "NutriChef reviews",
+    "meal plan results Dubai",
+    "NutriChef community UAE",
+  ],
 });
 
 export default function CommunityPage() {
@@ -15,18 +22,29 @@ export default function CommunityPage() {
     <div className="flex flex-col">
       <section className="border-b border-border-subtle bg-surface pt-28 pb-12 sm:pt-32 sm:pb-16">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
-          <p className="font-heading text-xs font-semibold uppercase tracking-[0.28em] text-secondary-text">
-            Community
+          <p className="font-heading text-xs font-semibold uppercase tracking-[0.28em] text-gold">
+            In good company
           </p>
           <h1 className="font-heading mt-3 text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl">
-            From the NutriChef community
+            The company you&rsquo;ll keep
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-secondary-text">
-            Real results, real stories from customers across Dubai and the UAE.
+            Founders, executives, athletes, and families across the Emirates run
+            their nutrition on NutriChef. Their results speak in their own words
+            — and their own photos.
           </p>
+          <div className="mt-8">
+            <Link
+              href="/plans"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-7 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover"
+            >
+              Join them — design my plan
+            </Link>
+          </div>
         </div>
       </section>
       <CommunitySection />
+      <SubscribeCTA />
       <InstagramFeed />
     </div>
   );

@@ -6,10 +6,15 @@ import { buildPageMetadata } from "@/lib/metadata";
 import { CONTACT, DELIVERY_ZONES_TEXT } from "@/lib/site-config";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Contact Us — NutriChef Dubai",
+  title: "Contact & Concierge — NutriChef | Private-Chef Meal Plans UAE",
   description:
-    "Get in touch with NutriChef for healthy meal plan delivery in Dubai. Call, email, WhatsApp, or visit us — we deliver across Dubai, Abu Dhabi, and Sharjah.",
+    "Reach the NutriChef concierge by phone, email, or WhatsApp — plan advice, delivery coverage, corporate and family accounts. Delivering across Dubai, Abu Dhabi & Sharjah; KSA, Qatar & Kuwait next.",
   path: "/contact-us",
+  keywords: [
+    "contact NutriChef",
+    "meal plan concierge Dubai",
+    "corporate meal delivery UAE contact",
+  ],
 });
 
 export default function ContactUsPage() {
@@ -19,14 +24,15 @@ export default function ContactUsPage() {
     <div className="min-h-screen bg-background">
       <section className="border-b border-border-subtle bg-bg-light pt-28 pb-12 sm:pt-32 sm:pb-16">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
-          <p className="font-heading text-xs font-semibold uppercase tracking-[0.28em] text-secondary-text">
-            Contact
+          <p className="font-heading text-xs font-semibold uppercase tracking-[0.28em] text-gold">
+            Concierge
           </p>
           <h1 className="font-heading mt-3 text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl">
-            Contact us
+            A human answers. Always.
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-secondary-text">
-            {DELIVERY_ZONES_TEXT}. Reach out — we&apos;re here to help.
+            {DELIVERY_ZONES_TEXT}. Plan advice, delivery coverage, corporate and
+            family accounts — our concierge replies in minutes.
           </p>
         </div>
       </section>

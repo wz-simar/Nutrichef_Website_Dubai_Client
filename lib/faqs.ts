@@ -7,54 +7,52 @@ export interface FaqItem {
 
 export const FAQ_ITEMS: FaqItem[] = [
   {
-    question: "Does NutriChef deliver healthy meal plans in Dubai?",
+    question: "What makes NutriChef different from other meal delivery services in Dubai?",
     answer:
-      "Yes, NutriChef delivers fresh, chef-crafted meal plans daily across Dubai including JLT, Dubai Marina, Business Bay, Downtown Dubai, DIFC, Jumeirah, Al Barsha, Mirdif, Deira, and The Springs. Meals are prepared fresh every morning and delivered to your door or office between 6 AM and 10 AM in temperature-controlled bags, seven days a week including weekends.",
+      "NutriChef is built to a private-chef standard, not a meal-prep standard. Every dish is designed by fine-dining-trained chefs, signed off by our Head Nutritionist, cooked fresh the same morning, and delivered across Dubai, Abu Dhabi, and Sharjah before 10 AM. You get 80+ rotating dishes a week, fully personalised macros, compostable premium packaging, and a concierge team on WhatsApp — with the freedom to pause, skip, or redirect deliveries anytime, penalty-free.",
   },
   {
-    question: "How much does a meal plan cost in Dubai?",
-    answer: `NutriChef meal plans in Dubai start from AED ${STARTING_PRICE_PER_DAY_AED} per day, depending on your goal, number of meals, and subscription duration. Delivery is included across all areas, JLT, Marina, Business Bay, Downtown Dubai, Jumeirah, Mirdif, The Springs, and beyond. No hidden fees, no lock-in contracts. View full pricing at nutrichef.ae/plans.`,
+    question: "How much does a NutriChef meal plan cost in Dubai and the UAE?",
+    answer: `Plans start from AED ${STARTING_PRICE_PER_DAY_AED} per day — less than a single business lunch in DIFC — with delivery included across Dubai, Abu Dhabi, and Sharjah. Your exact price depends on your goal, meals per day, and subscription length, and longer commitments unlock preferential rates. There are no hidden fees and no lock-in contracts. Build your exact plan and see live pricing at nutrichef.ae/plans.`,
   },
   {
-    question: "Which areas in Dubai and the UAE does NutriChef deliver to?",
+    question: "Which areas does NutriChef deliver to in the UAE?",
     answer:
-      "NutriChef covers a wide range of locations across the UAE. In Dubai, we deliver to JLT, Dubai Marina, Business Bay, Downtown Dubai, DIFC, Jumeirah, Al Barsha, The Springs, Mirdif, Deira, and surrounding communities. We also deliver to Abu Dhabi. Not sure if your area is covered? Message us on WhatsApp and we'll confirm within minutes.",
+      "We deliver every morning across Dubai — Emirates Hills, Palm Jumeirah, Downtown, DIFC, Business Bay, Dubai Marina, JLT, Jumeirah, Al Barsha, Mirdif, The Springs — plus Abu Dhabi and Sharjah. Villa, penthouse, or office reception: your meals arrive chilled in temperature-controlled bags before 10 AM, seven days a week. Not sure about your address? Our concierge confirms on WhatsApp within minutes.",
   },
   {
-    question: "Is NutriChef good for weight loss in Dubai?",
+    question: "Is NutriChef available in Saudi Arabia, Qatar, or Kuwait?",
     answer:
-      "Yes. NutriChef's calorie-controlled meal plans are nutritionist-designed for healthy, sustainable weight loss. Whether you live in Jumeirah, The Springs, Downtown, or Abu Dhabi, your meals arrive fresh at your door every morning — macro-tracked, chef-prepared, and ready to heat and eat in under 3 minutes. No cooking, no calorie counting, no guesswork.",
+      "Not yet — the UAE is our flagship market, and Saudi Arabia (Riyadh, Jeddah, Khobar), Qatar (Doha, Lusail), and Kuwait (Kuwait City, Salmiya) are next. Join the priority list on each market page — nutrichef.ae/saudi-arabia, /qatar, and /kuwait — and you'll be first at the table when we open, with founding-member pricing.",
   },
   {
-    question: "Can I get a high protein meal delivery in Dubai for muscle gain?",
+    question: "Can NutriChef build a plan around my exact macros and goals?",
     answer:
-      "Absolutely. NutriChef's High Protein plan is built for gym-goers across Dubai — from the fitness studios of JLT and Dubai Marina to gyms in Business Bay and Downtown. Every meal is macro-tracked with 150g+ protein options, rotating across 80+ weekly meals so you never eat the same thing twice. Fresh daily delivery, just heat and eat.",
+      "Yes — that's the core of what we do. Whether you're cutting for a triathlon, building muscle, managing energy through a brutal travel schedule, or simply eating impeccably, our Head Nutritionist calibrates your calories, protein, carbs, and fat to your body and ambition. Choose High Protein, Low Carb, Balanced, Chef's Picks, or go fully bespoke with Custom Macros.",
   },
   {
-    question: "Is there a keto or low carb meal plan delivery in Dubai?",
+    question: "Are the meals actually restaurant quality?",
     answer:
-      "Yes. NutriChef's Low Carb and Keto plan delivers macro-calculated, chef-prepared meals daily across Dubai and Abu Dhabi. Whether you're in The Springs, Mirdif, Jumeirah, or JLT, your keto meals arrive fresh every morning with zero prep required. The menu rotates weekly across 80+ options so you stay in ketosis without ever getting bored.",
+      "Our chefs come from fine-dining kitchens, and it shows. The menu rotates through 80+ dishes weekly — think miso-glazed salmon, saffron chicken, wagyu-style lean beef bowls — cooked fresh every morning with premium ingredients, never frozen, never reheated. The only difference from your favourite restaurant: every plate is macro-engineered and arrives before your first meeting.",
   },
   {
-    question: "Can I pause or cancel my NutriChef meal plan subscription?",
+    question: "I travel constantly. How flexible is the subscription?",
     answer:
-      "Yes, complete flexibility is built into every NutriChef plan. Pause, skip, or cancel anytime directly from your dashboard with no fees and no lock-in. Moving from Downtown to Business Bay or Jumeirah to Abu Dhabi? Simply update your delivery address and everything continues without interruption.",
+      "Completely. Pause, skip days, or change your delivery address from your dashboard in seconds — heading to Riyadh on Tuesday and back Thursday costs you nothing. There are no penalties, no phone calls required, and no lock-in. Your plan resumes exactly where you left it, and our concierge team is one WhatsApp message away if you'd rather have it handled for you.",
   },
   {
-    question: "Are NutriChef meals freshly cooked or frozen?",
+    question: "Are meals cooked fresh daily or frozen?",
     answer:
-      "All NutriChef meals are prepared fresh daily — never frozen, never reheated, never preserved. Meals are cooked every morning and delivered across Dubai and Abu Dhabi the same day in insulated, temperature-controlled bags. They stay fresh in your fridge for up to 3 days. Heat in the microwave for 2–3 minutes and eat.",
+      "Fresh, always. Every meal is cooked the same morning it's delivered — never frozen, never batch-reheated, never preserved. Meals travel in insulated, temperature-controlled bags and keep for up to three days refrigerated. Three minutes in the microwave or oven and you're eating at a level most people book a table for.",
   },
   {
-    question:
-      "Does NutriChef deliver healthy meals to offices in Business Bay, DIFC, and Downtown Dubai?",
+    question: "Does NutriChef cater to offices and corporate teams?",
     answer:
-      "Yes. NutriChef is a popular healthy lunch delivery choice for offices and corporate teams across Business Bay, DIFC, Downtown Dubai, JLT, and Dubai Marina. Fresh meals are delivered to your office reception every morning before 10 AM. Corporate group plans are available. Message us on WhatsApp to discuss pricing for your team.",
+      "Yes. We deliver daily to executive floors and teams across DIFC, Business Bay, Downtown Dubai, JLT, and Dubai Marina — individually labelled meals at your reception before 10 AM. Corporate and family group plans are available with dedicated account management. Message our concierge on WhatsApp to structure a plan for your team or household staff.",
   },
   {
-    question:
-      "How is NutriChef different from other meal delivery services in Dubai?",
+    question: "How do I start, and how fast can my first delivery arrive?",
     answer:
-      "NutriChef stands out in three ways. First, variety, 80+ rotating weekly meals means you never eat the same thing twice, whether you're ordering from Marina, Jumeirah, Mirdif, The Springs, or Abu Dhabi. Second, flexibility, pause, skip, or swap meals anytime with zero penalties. Third, packaging, NutriChef uses bagasse (compostable sugar cane) containers, making it one of the most eco-friendly meal plan services in the UAE. And unlike many competitors, your macros are fully customisable to your exact goals.",
+      "Design your plan at nutrichef.ae/plans — goal, meals per day, delivery days — in about two minutes. Check out securely with Stripe, and your first delivery typically arrives the next morning. Prefer a human? Our nutrition concierge will build the entire plan for you over WhatsApp.",
   },
 ];

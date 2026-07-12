@@ -14,10 +14,10 @@ const instaPosts = [
 
 export const InstagramFeed = () => {
     return (
-        <section className="bg-[#2B9D65] py-[60px] pb-[70px] overflow-hidden w-full">
+        <section className="bg-emerald-deep py-[60px] pb-[70px] overflow-hidden w-full">
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12 w-full mb-8">
-                <h3 className="text-white text-[28px] md:text-[32px] font-bold tracking-tight">
-                    More from our community
+                <h3 className="font-heading text-white text-[28px] md:text-[32px] font-semibold tracking-tight">
+                    More from the NutriChef community
                 </h3>
             </div>
 

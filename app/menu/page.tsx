@@ -93,13 +93,14 @@ export default function MenuPage() {
           <div>
             <div className="mb-6 inline-flex items-center rounded-full bg-primary/10 px-3 py-1.5 text-sm font-semibold text-primary">
               <span className="mr-2">📅</span>
-              This week&apos;s menu
+              This week&apos;s rotation
             </div>
             <h1 className="font-heading mb-3 text-4xl font-semibold tracking-tight md:text-5xl">
-              Check out this week&apos;s menu
+              What our chefs are cooking this week
             </h1>
             <p className="text-lg text-secondary-text">
-              Here&apos;s a taste of what&apos;s included when you subscribe
+              80+ dishes, every macro accounted for — this is what lands at your
+              door when you subscribe.
             </p>
           </div>
           <div className="mt-8 md:mt-0">
@@ -107,7 +108,7 @@ export default function MenuPage() {
               href="/plans"
               className="inline-flex rounded-full bg-primary px-8 py-3.5 text-base font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover"
             >
-              Order now
+              Start my plan
             </Link>
           </div>
         </div>

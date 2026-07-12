@@ -49,13 +49,16 @@ export const MealPlansSection = () => {
   };
 
   return (
-    <section className="py-24 bg-white overflow-hidden w-full">
+    <section className="py-24 bg-surface overflow-hidden w-full">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12 w-full mb-10 lg:mb-12">
-        <h2 className="text-[36px] md:text-[44px] font-extrabold text-[#2F3337] mb-2 tracking-tight">
-          Find your perfect meal plan
+        <p className="font-heading mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-gold">
+          Signature programmes
+        </p>
+        <h2 className="font-heading text-[36px] md:text-[44px] font-semibold text-foreground mb-2 tracking-tight">
+          A plan as individual as your ambition
         </h2>
-        <p className="text-[#878E99] font-bold text-[15px] mb-8">
-          Starting at{" "}
+        <p className="text-secondary-text font-semibold text-[15px] mb-8">
+          High protein, low carb, balanced, or fully bespoke macros — from{" "}
           {formatMajorUnits(2.5, currency, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
           /meal and{" "}
           {formatMajorUnits(1.5, currency, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
@@ -66,15 +69,15 @@ export const MealPlansSection = () => {
           <Button
             type="button"
             onClick={() => router.push("/plans")}
-            className="bg-[#249B60] hover:bg-[#1E8351] text-white px-8 rounded-full h-[46px] text-[15px] shadow-sm font-bold border-none"
+            className="px-8 rounded-full h-[46px] text-[15px]"
           >
-            See plans
+            Design my plan
           </Button>
 
           <div className="flex gap-3 hidden md:flex">
             <button
               onClick={() => scroll("left")}
-              className="w-[44px] h-[44px] rounded-full bg-[#EFF8F3] hover:bg-[#DDF0E6] flex items-center justify-center text-[#249B60] transition-colors"
+              className="w-[44px] h-[44px] rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center text-primary transition-colors"
               aria-label="Scroll left"
               type="button"
             >
@@ -93,7 +96,7 @@ export const MealPlansSection = () => {
             </button>
             <button
               onClick={() => scroll("right")}
-              className="w-[44px] h-[44px] rounded-full bg-[#EFF8F3] hover:bg-[#DDF0E6] flex items-center justify-center text-[#249B60] transition-colors"
+              className="w-[44px] h-[44px] rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center text-primary transition-colors"
               aria-label="Scroll right"
               type="button"
             >

@@ -6,6 +6,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TenantProvider } from "@/contexts/TenantContext";
+import { RegionProvider } from "@/contexts/RegionContext";
 import { OrganizationSchema } from "@/components/OrganizationSchema";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { defaultSiteMetadata } from "@/lib/metadata";
@@ -71,10 +72,12 @@ export default function RootLayout({
         <OrganizationSchema />
         <AuthProvider>
           <TenantProvider>
-            <Navbar />
-            <main className="flex-grow">{children}</main>
-            <Footer />
-            <WhatsAppButton />
+            <RegionProvider>
+              <Navbar />
+              <main className="flex-grow">{children}</main>
+              <Footer />
+              <WhatsAppButton />
+            </RegionProvider>
           </TenantProvider>
         </AuthProvider>
       </body>

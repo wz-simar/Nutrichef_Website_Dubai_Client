@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NutrichefLogo } from "@/components/NutrichefLogo";
 import { MenuOverlay } from "./MenuOverlay";
+import { RegionSelector } from "@/components/RegionSelector";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navLinks = [
@@ -255,7 +256,7 @@ export const Navbar = () => {
                 className="mt-4 flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover"
                 onClick={() => setOpen(false)}
               >
-                See plans
+                Start my plan
               </Link>
               <button
                 type="button"
@@ -287,7 +288,9 @@ export const Navbar = () => {
           >
             <NutrichefLogo
               priority
-              className="!h-8 max-w-[min(190px,58vw)] sm:!h-9 lg:!h-10"
+              className={`!h-8 max-w-[min(190px,58vw)] transition-[filter] duration-300 sm:!h-9 lg:!h-10 ${
+                transparent ? "brightness-0 invert" : ""
+              }`}
             />
           </Link>
 
@@ -304,11 +307,14 @@ export const Navbar = () => {
                 {label}
               </Link>
             ))}
+            <div className="ml-1">
+              <RegionSelector onTransparent={transparent} />
+            </div>
             <Link
               href="/plans"
               className="ml-1 inline-flex h-10 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover"
             >
-              See plans
+              Start my plan
             </Link>
             <div className="ml-2 pl-2">
               <NavbarUserMenu />
@@ -316,6 +322,7 @@ export const Navbar = () => {
           </div>
 
           <div className="flex items-center gap-2 lg:hidden">
+            <RegionSelector onTransparent={transparent} />
             <NavbarUserMenu />
             <button
               type="button"

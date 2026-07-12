@@ -2,32 +2,31 @@ import React from "react";
 
 const features = [
   {
-    title: "Total Control",
+    title: "Time Is Your Scarcest Asset",
     description:
-      "Pause, cancel or change your plan at any time. Address change? No problem. Complete flexibility at your fingertips.",
-    iconPath:
-      "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z",
+      "We give you back 10+ hours a week — no menus, no meal prep, no decisions. Your nutrition runs itself while you run everything else.",
+    iconPath: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
   },
   {
-    title: "Chef Crafted",
+    title: "A Chef's Brigade, Not a Kitchen Line",
     description:
-      "We don't believe in boring diet food. Our rotating menu is designed by chefs and cooked fresh using high quality ingredients.",
+      "80+ dishes in weekly rotation, built by chefs who trained in fine dining. This is restaurant-calibre food that happens to hit your macros.",
     iconPath:
       "M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4",
   },
   {
-    title: "Daily Fresh Deliveries",
+    title: "Clinically Engineered Nutrition",
     description:
-      "Your meals are prepared fresh and delivered safely to your door or office every morning in temperature-controlled bags.",
+      "Every plan is signed off by our Head Nutritionist. Calories, protein, carbs, and fat — calculated to your body and your ambition, not a template.",
     iconPath:
-      "M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4",
+      "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
   },
   {
-    title: "Eco-friendly Packaging",
+    title: "White-Glove Flexibility",
     description:
-      "Eat your meals with peace of mind. Our containers are made of bagasse, a compostable byproduct of sugar cane.",
+      "Travelling to Riyadh Tuesday? Board meeting ran late? Pause, skip, or redirect your deliveries in seconds. Zero penalties, zero questions.",
     iconPath:
-      "M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+      "M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4",
   },
 ];
 
@@ -39,33 +38,33 @@ export const FeaturesSection = () => {
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
         <div className="max-w-3xl">
-          <p className="font-heading text-xs font-semibold uppercase tracking-[0.28em] text-secondary-text">
-            Why Nutrichef
+          <p className="font-heading text-xs font-semibold uppercase tracking-[0.28em] text-gold">
+            Built for people who don&rsquo;t compromise
           </p>
           <h2 className="font-heading mt-3 text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl lg:text-[2.75rem]">
-            Total control. Full flexibility.
+            You handle the empire. We handle the fuel.
           </h2>
           <p className="mt-4 text-xl font-semibold text-primary sm:text-2xl">
-            Calories and macros that match your goals
+            Precision nutrition that keeps pace with your calendar
           </p>
           <ul className="mt-8 flex flex-col gap-3 text-base font-medium text-foreground sm:flex-row sm:flex-wrap sm:gap-x-10 sm:gap-y-2">
             <li className="flex items-center gap-2">
-              <span className="text-primary" aria-hidden>
+              <span className="text-gold" aria-hidden>
                 ✓
               </span>
-              Choose what you like.
+              Delivered before your first call.
             </li>
             <li className="flex items-center gap-2">
-              <span className="text-primary" aria-hidden>
+              <span className="text-gold" aria-hidden>
                 ✓
               </span>
-              Swap what you don&apos;t.
+              Macros managed for you.
             </li>
             <li className="flex items-center gap-2">
-              <span className="text-primary" aria-hidden>
+              <span className="text-gold" aria-hidden>
                 ✓
               </span>
-              Pause. Skip. Change.
+              Pause. Skip. Redirect. Anytime.
             </li>
           </ul>
         </div>
@@ -76,7 +75,7 @@ export const FeaturesSection = () => {
               key={feature.title}
               className="group relative bg-surface p-8 transition hover:bg-background sm:p-9"
             >
-              <span className="font-heading absolute right-6 top-6 text-5xl font-semibold tabular-nums text-foreground/[0.06] transition group-hover:text-primary/15 sm:text-6xl">
+              <span className="font-heading absolute right-6 top-6 text-5xl font-semibold tabular-nums text-foreground/[0.06] transition group-hover:text-gold/20 sm:text-6xl">
                 {String(idx + 1).padStart(2, "0")}
               </span>
               <div className="relative">

@@ -1,4 +1,5 @@
 import { CONTACT, SITE_NAME, SITE_URL, SOCIAL_LINKS } from "@/lib/site-config";
+import { REGIONS } from "@/lib/regions";
 
 export function OrganizationSchema() {
   const schema = {
@@ -7,8 +8,9 @@ export function OrganizationSchema() {
     name: SITE_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/logo.jpg`,
+    slogan: "Private-Chef Nutrition, Delivered",
     description:
-      "Chef-crafted healthy meal plans delivered fresh daily across Dubai, Abu Dhabi, and Sharjah.",
+      "Chef-crafted, nutritionist-signed meal plans delivered fresh every morning across Dubai, Abu Dhabi, and Sharjah — expanding to Saudi Arabia, Qatar, and Kuwait.",
     email: CONTACT.email,
     telephone: CONTACT.phoneTel,
     address: {
@@ -18,9 +20,8 @@ export function OrganizationSchema() {
       addressCountry: "AE",
     },
     areaServed: [
-      { "@type": "City", name: "Dubai" },
-      { "@type": "City", name: "Abu Dhabi" },
-      { "@type": "City", name: "Sharjah" },
+      ...REGIONS.map((r) => ({ "@type": "Country", name: r.name })),
+      ...REGIONS.flatMap((r) => r.cities.map((name) => ({ "@type": "City", name }))),
     ],
     sameAs: [
       SOCIAL_LINKS.facebook,

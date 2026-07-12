@@ -31,14 +31,15 @@ export const CommunitySection = () => {
     <section id="community" className="bg-surface py-20 sm:py-24 lg:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
         <div className="max-w-2xl">
-          <p className="font-heading text-xs font-semibold uppercase tracking-[0.28em] text-secondary-text">
-            Community
+          <p className="font-heading text-xs font-semibold uppercase tracking-[0.28em] text-gold">
+            In good company
           </p>
           <h2 className="font-heading mt-3 text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl lg:text-[2.75rem]">
-            From The Community
+            The people at our table
           </h2>
           <p className="mt-3 text-lg text-secondary-text">
-            Real results, real stories
+            Founders, executives, athletes, and families across the Emirates —
+            real members, real results.
           </p>
         </div>
 

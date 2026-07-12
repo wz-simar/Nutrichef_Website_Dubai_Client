@@ -16,11 +16,11 @@ export function NutritionistCredential() {
             />
           </div>
           <div className="lg:col-span-7">
-            <p className="font-heading text-xs font-semibold uppercase tracking-[0.28em] text-secondary-text">
-              Expert-led nutrition
+            <p className="font-heading text-xs font-semibold uppercase tracking-[0.28em] text-gold">
+              Clinical rigour behind every plate
             </p>
             <h2 className="font-heading mt-3 text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl">
-              Meals designed by a certified nutritionist
+              Your nutrition, signed off by a doctor of the craft
             </h2>
             <p className="mt-2 text-lg font-semibold text-primary">
               {NUTRITIONIST.name} · {NUTRITIONIST.title}

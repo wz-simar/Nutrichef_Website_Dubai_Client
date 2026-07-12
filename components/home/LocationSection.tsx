@@ -6,11 +6,11 @@ export function LocationSection() {
     <section className="border-t border-border-subtle bg-surface py-20 sm:py-24 lg:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
         <div className="max-w-2xl">
-          <p className="font-heading text-xs font-semibold uppercase tracking-[0.28em] text-secondary-text">
-            Find us
+          <p className="font-heading text-xs font-semibold uppercase tracking-[0.28em] text-gold">
+            Our flagship kitchen
           </p>
           <h2 className="font-heading mt-3 text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl">
-            Serving Dubai &amp; the UAE
+            Rooted in Dubai. Serving the Emirates.
           </h2>
           <p className="mt-3 text-lg text-secondary-text">{CONTACT.address}</p>
         </div>
