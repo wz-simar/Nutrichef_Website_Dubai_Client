@@ -11,10 +11,17 @@ interface BlogArticleBodyProps {
   linkAnchors?: readonly LinkAnchorDefinition[];
 }
 
-function RichParagraph({ parts, as: Tag = "p" }: { parts: ParagraphPart[]; as?: "p" | "span" }) {
-  const className = "text-base leading-relaxed text-secondary-text sm:text-lg";
+function RichParagraph({ parts, as: Tag = "p" }: { parts: ParagraphPart[]; as?: "p" | "span" | "div" }) {
+  const className =
+    Tag === "p" || Tag === "div"
+      ? "text-base leading-relaxed text-secondary-text sm:text-lg"
+      : undefined;
+
+  const linkClass =
+    "font-semibold text-primary underline underline-offset-4 transition hover:text-primary-hover";
+
   return (
-    <Tag className={Tag === "p" ? className : undefined}>
+    <Tag className={className}>
       {parts.map((part, index) =>
         part.type === "text" ? (
           <span key={`${part.value.slice(0, 24)}-${index}`}>{part.value}</span>
@@ -24,22 +31,46 @@ function RichParagraph({ parts, as: Tag = "p" }: { parts: ParagraphPart[]; as?: 
             href={part.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-primary underline-offset-4 transition hover:underline"
+            className={linkClass}
           >
             {part.label}
           </a>
         ) : (
-          <Link
-            key={`${part.href}-${index}`}
-            href={part.href}
-            className="font-semibold text-primary underline-offset-4 transition hover:underline"
-          >
+          <Link key={`${part.href}-${index}`} href={part.href} className={linkClass}>
             {part.label}
           </Link>
         ),
       )}
     </Tag>
   );
+}
+
+function renderLinkifiedText(
+  text: string,
+  linkAnchors: readonly LinkAnchorDefinition[] | undefined,
+  as: "p" | "span" | "div" = "p",
+) {
+  if (!linkAnchors?.length) {
+    if (as === "p") {
+      return (
+        <p className="text-base leading-relaxed text-secondary-text sm:text-lg">{text}</p>
+      );
+    }
+    return <>{text}</>;
+  }
+
+  const parts = linkifyText(text, linkAnchors);
+  const hasLink = parts.some((part) => part.type === "link");
+  if (!hasLink) {
+    if (as === "p") {
+      return (
+        <p className="text-base leading-relaxed text-secondary-text sm:text-lg">{text}</p>
+      );
+    }
+    return <>{text}</>;
+  }
+
+  return <RichParagraph as={as} parts={parts} />;
 }
 
 function BlogBlockRenderer({
@@ -50,43 +81,36 @@ function BlogBlockRenderer({
   linkAnchors?: readonly LinkAnchorDefinition[];
 }) {
   switch (block.type) {
-    case "paragraph": {
-      if (linkAnchors?.length) {
-        const parts = linkifyText(block.text, linkAnchors);
-        const hasLink = parts.some((part) => part.type === "link");
-        if (hasLink) {
-          return <RichParagraph parts={parts} />;
-        }
-      }
-      return (
-        <p className="text-base leading-relaxed text-secondary-text sm:text-lg">
-          {block.text}
-        </p>
-      );
-    }
+    case "paragraph":
+      return renderLinkifiedText(block.text, linkAnchors, "p");
 
     case "richParagraph":
       return <RichParagraph parts={block.parts} />;
 
     case "heading": {
       const id = resolveHeadingId(block);
-      if (block.level === 2) {
-        return (
-          <h2
-            id={id}
-            className="scroll-mt-32 font-heading text-2xl font-semibold leading-tight tracking-tight text-foreground sm:text-3xl"
-          >
-            {block.text}
-          </h2>
-        );
+      const headingClass =
+        block.level === 2
+          ? "scroll-mt-32 font-heading text-2xl font-semibold leading-tight tracking-tight text-foreground sm:text-3xl"
+          : "scroll-mt-32 font-heading text-xl font-semibold leading-snug tracking-tight text-foreground sm:text-2xl";
+      const Tag = block.level === 2 ? "h2" : "h3";
+
+      if (linkAnchors?.length) {
+        const parts = linkifyText(block.text, linkAnchors);
+        const hasLink = parts.some((part) => part.type === "link");
+        if (hasLink) {
+          return (
+            <Tag id={id} className={headingClass}>
+              <RichParagraph as="span" parts={parts} />
+            </Tag>
+          );
+        }
       }
+
       return (
-        <h3
-          id={id}
-          className="scroll-mt-32 font-heading text-xl font-semibold leading-snug tracking-tight text-foreground sm:text-2xl"
-        >
+        <Tag id={id} className={headingClass}>
           {block.text}
-        </h3>
+        </Tag>
       );
     }
 
@@ -149,16 +173,26 @@ function BlogBlockRenderer({
                         : "border-b border-border-subtle bg-background"
                     }
                   >
-                    {row.map((cell, cellIndex) => (
-                      <td
-                        key={`${rowIndex}-${cellIndex}`}
-                        className={`px-4 py-3 align-top text-secondary-text sm:px-5 sm:py-4 ${
-                          cellIndex === 0 ? "font-semibold text-foreground" : ""
-                        }`}
-                      >
-                        {cell}
-                      </td>
-                    ))}
+                    {row.map((cell, cellIndex) => {
+                      const parts =
+                        linkAnchors?.length ? linkifyText(cell, linkAnchors) : null;
+                      const hasLink = parts?.some((part) => part.type === "link");
+
+                      return (
+                        <td
+                          key={`${rowIndex}-${cellIndex}`}
+                          className={`px-4 py-3 align-top text-secondary-text sm:px-5 sm:py-4 ${
+                            cellIndex === 0 ? "font-semibold text-foreground" : ""
+                          }`}
+                        >
+                          {hasLink && parts ? (
+                            <RichParagraph as="span" parts={parts} />
+                          ) : (
+                            cell
+                          )}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
@@ -166,7 +200,7 @@ function BlogBlockRenderer({
           </div>
           {block.caption ? (
             <figcaption className="border-t border-border-subtle px-5 py-3 text-xs leading-relaxed text-secondary-text">
-              {block.caption}
+              {renderLinkifiedText(block.caption, linkAnchors, "span")}
             </figcaption>
           ) : null}
         </figure>
@@ -205,11 +239,9 @@ function BlogBlockRenderer({
               {block.title}
             </p>
           ) : null}
-          <p
-            className={`text-base leading-relaxed text-foreground sm:text-lg ${block.title ? "mt-2" : ""}`}
-          >
-            {block.text}
-          </p>
+          <div className={`${block.title ? "mt-2" : ""} text-base leading-relaxed text-foreground sm:text-lg`}>
+            {renderLinkifiedText(block.text, linkAnchors, "span")}
+          </div>
         </aside>
       );
 

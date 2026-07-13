@@ -28,6 +28,10 @@ const resourceLinks = [
     href: "/blogs/Top-5-Healthy-Meal-Delivery-Services-in-Dubai",
     label: "Top 5 Meal Delivery Services in Dubai",
   },
+  {
+    href: "/blogs/Office-Meal-Delivery-Dubai",
+    label: "Office Meal Delivery Dubai",
+  },
 ] as const;
 
 export const Footer = () => {

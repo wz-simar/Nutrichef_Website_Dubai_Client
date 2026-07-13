@@ -21,3 +21,8 @@ export const TOP5_BLOG_ASSETS = {
     "ramadan-meal-plans-in-dubai.webp",
   ),
 } as const;
+
+export const OFFICE_BLOG_ASSETS = {
+  slugFolder: "office-meal-delivery-dubai",
+  hero: "/HeroSection.jpeg",
+} as const;

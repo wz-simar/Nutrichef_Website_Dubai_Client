@@ -37,9 +37,9 @@ No per-post `page.tsx` needed — `app/blogs/[slug]/page.tsx` renders all regist
 
 ## 4. Hyperlinks from Word
 
-When SEO provides a `.docx` with hyperlinks:
+When SEO provides a `.docx` or `.pdf` with hyperlinks:
 
-1. Place the file in `content/blogs/` (or `public/` temporarily)
+1. Place the source file in `content/blogs/` (e.g. `office nutrichef.pdf`)
 2. Extract anchors into `content/blogs/{kebab-slug}-links.ts`
 3. Set `linkAnchors` on the `BlogPost` — plain `paragraph` and `list` blocks auto-linkify via `lib/blog/linkify.ts`
 4. Match anchor text **exactly** to the Word doc phrase (e.g. `NutriChef's full pricing and plan options`)

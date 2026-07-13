@@ -1,9 +1,11 @@
 import type { BlogPost } from "@/lib/blog/types";
+import { officeMealDeliveryDubai } from "@/content/blogs/office-meal-delivery-dubai";
 import { top5HealthyMealDeliveryServicesInDubai } from "@/content/blogs/top-5-healthy-meal-delivery-services-in-dubai";
 
 /** Central registry — add every published blog post here. */
 export const BLOG_REGISTRY: Record<string, BlogPost> = {
   [top5HealthyMealDeliveryServicesInDubai.slug]: top5HealthyMealDeliveryServicesInDubai,
+  [officeMealDeliveryDubai.slug]: officeMealDeliveryDubai,
 };
 
 export const BLOG_SLUGS = Object.keys(BLOG_REGISTRY);
