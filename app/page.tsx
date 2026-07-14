@@ -5,7 +5,7 @@ import { FeaturesSection } from "@/components/home/FeaturesSection";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { MealPlansSection } from "@/components/home/MealPlansSection";
 import { MarketsSection } from "@/components/home/MarketsSection";
-import { InstagramFeed } from "@/components/home/InstagramFeed";
+// import { InstagramFeed } from "@/components/home/InstagramFeed";
 import { SubscribeCTA } from "@/components/home/SubscribeCTA";
 import { buildPageMetadata } from "@/lib/metadata";
 import { HOME_META } from "@/lib/site-config";
@@ -35,7 +35,7 @@ export default function Home() {
       <HowItWorks />
       <MealPlansSection />
       <MarketsSection />
-      <InstagramFeed />
+      {/* <InstagramFeed /> */}
       <SubscribeCTA />
     </div>
   );
