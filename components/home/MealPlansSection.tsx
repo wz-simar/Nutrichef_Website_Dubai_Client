@@ -51,18 +51,13 @@ export const MealPlansSection = () => {
   return (
     <section className="py-24 bg-surface overflow-hidden w-full">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12 w-full mb-10 lg:mb-12">
-        <p className="font-heading mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-gold">
-          Signature programmes
-        </p>
         <h2 className="font-heading text-[36px] md:text-[44px] font-semibold text-foreground mb-2 tracking-tight">
-          A plan as individual as your ambition
+          Find your plan
         </h2>
         <p className="text-secondary-text font-semibold text-[15px] mb-8">
-          High protein, low carb, balanced, or fully bespoke macros — from{" "}
-          {formatMajorUnits(2.5, currency, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
-          /meal and{" "}
-          {formatMajorUnits(1.5, currency, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
-          /breakfast
+          From{" "}
+          {formatMajorUnits(45, currency, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+          /meal
         </p>
 
         <div className="flex justify-between items-center w-full">
@@ -71,7 +66,7 @@ export const MealPlansSection = () => {
             onClick={() => router.push("/plans")}
             className="px-8 rounded-full h-[46px] text-[15px]"
           >
-            Design my plan
+            Start my plan →
           </Button>
 
           <div className="flex gap-3 hidden md:flex">

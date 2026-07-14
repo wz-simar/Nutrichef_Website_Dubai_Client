@@ -1,9 +1,12 @@
 /**
- * Meal-plan templates expose per-slot pricing with duration keys "7", "14", "28"
- * (string keys in JSON) — calendar days for 1, 2, and 4 weeks.
+ * Meal-plan templates expose per-slot pricing with duration keys "20", "24",
+ * "30", "90" (string keys in JSON) — the programme lengths in calendar days.
+ *
+ * Pricing is linear: each slot's price for a duration equals
+ * `perMealRate × days`, so a plan's total is `slotPrice × mealsPerDay`.
  */
 
-export const PLAN_DURATION_DAY_KEYS = ["7", "14", "28"] as const;
+export const PLAN_DURATION_DAY_KEYS = ["20", "24", "30", "90"] as const;
 export type PlanDurationDayKey = (typeof PLAN_DURATION_DAY_KEYS)[number];
 
 const SUPPORTED = new Set<string>(PLAN_DURATION_DAY_KEYS);
@@ -12,12 +15,11 @@ export function isPlanDurationDayKey(key: string): key is PlanDurationDayKey {
   return SUPPORTED.has(key);
 }
 
-/** Billing period length in weeks (1, 2, or 4) for a supported API key. */
-export function billingWeeksForDurationKey(key: string): number | null {
+/** Calendar days for a supported key. */
+export function daysForDurationKey(key: string): number | null {
   if (!isPlanDurationDayKey(key)) return null;
   const days = parseInt(key, 10);
-  if (!Number.isFinite(days) || days <= 0 || days % 7 !== 0) return null;
-  return days / 7;
+  return Number.isFinite(days) && days > 0 ? days : null;
 }
 
 /** Fixed display order for tier pickers / price tables. */
@@ -30,42 +32,15 @@ export function supportedDurationKeysPresent(rawKeys: Iterable<string>): PlanDur
 }
 
 export function planDurationListTitle(key: PlanDurationDayKey): string {
-  switch (key) {
-    case "7":
-      return "1 week";
-    case "14":
-      return "2 weeks";
-    case "28":
-      return "4 weeks";
-    default:
-      return key;
-  }
+  return `${key} days`;
 }
 
 export function planDurationShortTitle(key: PlanDurationDayKey): string {
-  switch (key) {
-    case "7":
-      return "Weekly";
-    case "14":
-      return "2 weeks";
-    case "28":
-      return "Monthly";
-    default:
-      return key;
-  }
+  return `${key} days`;
 }
 
 export function planDurationPeriodPhrase(key: PlanDurationDayKey): string {
-  switch (key) {
-    case "7":
-      return "per week";
-    case "14":
-      return "per 2 weeks";
-    case "28":
-      return "per 4 weeks";
-    default:
-      return `per ${key} days`;
-  }
+  return `for ${key} days`;
 }
 
 /** All duration keys present on pricing rows for the selected meal slots (including legacy). */

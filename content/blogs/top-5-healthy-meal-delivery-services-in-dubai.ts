@@ -6,7 +6,7 @@ export const top5HealthyMealDeliveryServicesInDubai: BlogPost = {
   slug: "Top-5-Healthy-Meal-Delivery-Services-in-Dubai",
   title: "Top 5 Best Healthy Meal Delivery Services in Dubai",
   description:
-    "Comparing Dubai's top 5 healthy meal delivery services on price, menu, nutrition, and flexibility. See why NutriChef leads the list in 2026. From AED 99/day.",
+    "Comparing Dubai's top 5 healthy meal delivery services on price, menu, nutrition, and flexibility. See why NutriChef leads the list in 2026. From AED 45/meal.",
   publishedAt: "2026-07-03",
   readTimeMinutes: 22,
   category: "Guides",
@@ -101,7 +101,7 @@ export const top5HealthyMealDeliveryServicesInDubai: BlogPost = {
       rows: [
         [
           "NutriChef",
-          "From AED 99",
+          "From AED 45/meal",
           "80+ rotating weekly meals",
           "6AM to 10AM",
           "Yes",
@@ -196,7 +196,7 @@ export const top5HealthyMealDeliveryServicesInDubai: BlogPost = {
     },
     {
       type: "paragraph",
-      text: "NutriChef keeps pricing transparent and simple, starting from AED 99 per day. The three main plan types are Balanced, High Protein, and Low Carb. Each plan is fully macro-tracked, built around your specific goal, and customizable based on your preferences and allergen requirements.",
+      text: "NutriChef keeps pricing transparent and simple, starting from AED 45 per meal. The three main plan types are Balanced, High Protein, and Low Carb. Each plan is fully macro-tracked, built around your specific goal, and customizable based on your preferences and allergen requirements.",
     },
     {
       type: "paragraph",
@@ -510,7 +510,7 @@ export const top5HealthyMealDeliveryServicesInDubai: BlogPost = {
         ["Strictest calorie control and 800+ dish options", "Kcal Life"],
         ["Diabetes, postnatal, or clinical dietary needs", "Right Bite"],
         ["Office lunch and multi-cuisine variety", "Meals on Me"],
-        ["Lowest entry price for chef-crafted meals", "NutriChef from AED 99/day"],
+        ["Lowest entry price for chef-crafted meals", "NutriChef from AED 45/meal"],
         ["Keto or low carb meal delivery Dubai", "NutriChef or Kcal"],
         ["High protein plan for gym and muscle gain", "NutriChef or Kcal"],
         ["Vegan meal plan Dubai", "Meals on Me or Eat Clean"],
@@ -617,7 +617,7 @@ export const top5HealthyMealDeliveryServicesInDubai: BlogPost = {
     },
     {
       type: "paragraph",
-      text: "NutriChef starts from AED 99 per day, which works out to roughly AED 693 per week or approximately AED 2,970 per month. That includes chef-prepared, nutritionist-designed, fresh daily meals delivered to your door each morning. Compare this to Kcal at approximately AED 3,100 per month or Right Bite at similar pricing, and NutriChef represents genuine value for the quality you receive.",
+      text: "NutriChef starts from AED 45 per meal, which works out to roughly AED 693 per week or approximately AED 2,970 per month. That includes chef-prepared, nutritionist-designed, fresh daily meals delivered to your door each morning. Compare this to Kcal at approximately AED 3,100 per month or Right Bite at similar pricing, and NutriChef represents genuine value for the quality you receive.",
     },
     {
       type: "paragraph",
@@ -643,7 +643,7 @@ export const top5HealthyMealDeliveryServicesInDubai: BlogPost = {
     },
     {
       type: "paragraph",
-      text: "A NutriChef meal plan starts from AED 99 per day, roughly AED 693 per week, fully prepared, macro-tracked, delivered fresh each morning at your door. The financial difference is genuinely minimal. The time saving is 5 plus hours per week. The nutritional precision is incomparable.",
+      text: "A NutriChef meal plan starts from AED 45 per meal, roughly AED 693 per week, fully prepared, macro-tracked, delivered fresh each morning at your door. The financial difference is genuinely minimal. The time saving is 5 plus hours per week. The nutritional precision is incomparable.",
     },
     {
       type: "paragraph",
@@ -663,7 +663,7 @@ export const top5HealthyMealDeliveryServicesInDubai: BlogPost = {
     },
     {
       type: "paragraph",
-      text: "NutriChef is the top-rated healthy meal delivery service in Dubai in 2026 for residents who want maximum variety, nutritionist-designed meals, eco-friendly packaging, and full subscription flexibility, all starting from AED 99 per day. For medical dietary needs, Right Bite is the most clinically credentialed choice. For app-first experiences, Calo is the strongest option.",
+      text: "NutriChef is the top-rated healthy meal delivery service in Dubai in 2026 for residents who want maximum variety, nutritionist-designed meals, eco-friendly packaging, and full subscription flexibility, all starting from AED 45 per meal. For medical dietary needs, Right Bite is the most clinically credentialed choice. For app-first experiences, Calo is the strongest option.",
     },
     {
       type: "heading",
@@ -673,7 +673,7 @@ export const top5HealthyMealDeliveryServicesInDubai: BlogPost = {
     },
     {
       type: "paragraph",
-      text: "NutriChef starts from AED 99 per day, making it one of the most affordable chef-crafted healthy meal delivery services in Dubai. This includes fresh daily delivery across JLT, Business Bay, Jumeirah, Downtown Dubai, Abu Dhabi, Sharjah, and many other areas.",
+      text: "NutriChef starts from AED 45 per meal, making it one of the most affordable chef-crafted healthy meal delivery services in Dubai. This includes fresh daily delivery across JLT, Business Bay, Jumeirah, Downtown Dubai, Abu Dhabi, Sharjah, and many other areas.",
     },
     {
       type: "heading",
@@ -787,7 +787,7 @@ export const top5HealthyMealDeliveryServicesInDubai: BlogPost = {
     },
     {
       type: "paragraph",
-      text: "The combination of 80 plus rotating weekly meals, Dr. Fatima Al Hashimi's 12-year sports nutrition expertise behind every dish, eco-friendly bagasse packaging, a starting price of AED 99 per day, daily fresh delivery between 6AM and 10AM, coverage across Dubai, Abu Dhabi, and Sharjah, and complete subscription flexibility with no lock-in contract makes NutriChef the most well-rounded option in the market.",
+      text: "The combination of 80 plus rotating weekly meals, Dr. Fatima Al Hashimi's 12-year sports nutrition expertise behind every dish, eco-friendly bagasse packaging, a starting price of AED 45 per meal, daily fresh delivery between 6AM and 10AM, coverage across Dubai, Abu Dhabi, and Sharjah, and complete subscription flexibility with no lock-in contract makes NutriChef the most well-rounded option in the market.",
     },
     {
       type: "paragraph",
@@ -816,7 +816,7 @@ export const top5HealthyMealDeliveryServicesInDubai: BlogPost = {
   ] satisfies BlogBlock[],
   cta: {
     heading: "Ready to try Dubai's #1 rated meal delivery?",
-    text: "Explore NutriChef plans from AED 99/day — 80+ rotating meals, eco-friendly packaging, pause or cancel anytime.",
+    text: "Explore NutriChef plans from AED 45/meal — 80+ rotating meals, eco-friendly packaging, pause or cancel anytime.",
     buttonLabel: "See plans",
     buttonHref: "/plans",
   },

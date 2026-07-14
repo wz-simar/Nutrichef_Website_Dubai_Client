@@ -3,14 +3,10 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { MenuPreview } from "@/components/home/MenuPreview";
 import { FeaturesSection } from "@/components/home/FeaturesSection";
 import { HowItWorks } from "@/components/home/HowItWorks";
-import { CommunitySection } from "@/components/home/CommunitySection";
 import { MealPlansSection } from "@/components/home/MealPlansSection";
 import { MarketsSection } from "@/components/home/MarketsSection";
-import { SubscribeCTA } from "@/components/home/SubscribeCTA";
-import { FAQSection } from "@/components/home/FAQSection";
 import { InstagramFeed } from "@/components/home/InstagramFeed";
-import { NutritionistCredential } from "@/components/home/NutritionistCredential";
-import { LocationSection } from "@/components/home/LocationSection";
+import { SubscribeCTA } from "@/components/home/SubscribeCTA";
 import { buildPageMetadata } from "@/lib/metadata";
 import { HOME_META } from "@/lib/site-config";
 
@@ -32,19 +28,15 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <HeroSection />
       <MenuPreview />
       <FeaturesSection />
       <HowItWorks />
-      <NutritionistCredential />
       <MealPlansSection />
-      <CommunitySection />
       <MarketsSection />
-      <SubscribeCTA />
-      <FAQSection />
-      <LocationSection />
       <InstagramFeed />
+      <SubscribeCTA />
     </div>
   );
 }

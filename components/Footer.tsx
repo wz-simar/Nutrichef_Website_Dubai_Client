@@ -45,8 +45,7 @@ export const Footer = () => {
               Your chef is ready. Your table is set.
             </h2>
             <p className="mt-2 text-[0.9375rem] leading-relaxed text-white/65">
-              Join the executives, founders, and families across the UAE who never
-              think about &ldquo;what&rsquo;s for lunch&rdquo; again.
+              Never think about &ldquo;what&rsquo;s for lunch&rdquo; again.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">

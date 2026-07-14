@@ -25,7 +25,7 @@ export const TOP5_BLOG_LINKS = [
     url: "https://www.nutrichef.ae/plans",
   },
   {
-    anchor: "NutriChef starts from AED 99 per day",
+    anchor: "NutriChef starts from AED 45 per meal",
     url: "https://www.nutrichef.ae/plans",
   },
   {

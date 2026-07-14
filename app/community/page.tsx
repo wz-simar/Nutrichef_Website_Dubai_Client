@@ -38,7 +38,7 @@ export default function CommunityPage() {
               href="/plans"
               className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-7 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover"
             >
-              Join them — design my plan
+              Start my plan
             </Link>
           </div>
         </div>

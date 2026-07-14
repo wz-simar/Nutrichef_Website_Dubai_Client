@@ -25,15 +25,15 @@ function MarketSchema({ region }: { region: Region }) {
 const pillars = [
   {
     title: "Chef-crafted, nutritionist-signed",
-    body: "Fine-dining chefs cook every dish fresh each morning; our Head Nutritionist signs off every macro before it leaves the kitchen.",
+    body: "Cooked fresh each morning. Every macro signed off.",
   },
   {
     title: "80+ dishes, zero repetition",
-    body: "A weekly rotating menu with the variety of your favourite restaurants and the discipline of a performance lab.",
+    body: "Restaurant variety, nutrition-lab discipline.",
   },
   {
     title: "White-glove flexibility",
-    body: "Pause, skip, or redirect deliveries in seconds. Your subscription bends around your calendar, never the reverse.",
+    body: "Pause, skip, or redirect in seconds. No penalties.",
   },
 ];
 
@@ -72,7 +72,7 @@ export function MarketLanding({ region }: { region: Region }) {
                   href="/plans"
                   className="inline-flex h-14 items-center justify-center rounded-full bg-primary px-9 text-base font-semibold text-white shadow-lg shadow-black/20 transition hover:bg-primary-hover"
                 >
-                  Design my plan
+                  Start my plan
                 </Link>
                 <Link
                   href="/menu"
@@ -141,8 +141,8 @@ export function MarketLanding({ region }: { region: Region }) {
           </h2>
           <p className="mt-4 max-w-2xl text-lg text-secondary-text">
             {isLive
-              ? "Fresh deliveries every morning before 10 AM, seven days a week, in temperature-controlled bags."
-              : "Our launch kitchens are planned around the neighbourhoods where our members live and work."}
+              ? "Every morning before 10 AM, seven days a week."
+              : "Launch kitchens planned around where our members live and work."}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             {region.cities.map((city) => (

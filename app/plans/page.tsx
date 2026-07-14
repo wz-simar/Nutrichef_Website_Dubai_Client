@@ -8,33 +8,39 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { formatMinorUnits, formatMajorUnits } from "@/lib/formatCurrency";
 import {
-  billingWeeksForDurationKey,
   collectRawDurationKeysFromPricing,
+  daysForDurationKey,
   isPlanDurationDayKey,
   planDurationListTitle,
-  planDurationPeriodPhrase,
   planDurationShortTitle,
   supportedDurationKeysPresent,
 } from "@/lib/mealPlanDurationTiers";
 
 const GOAL_EMOJIS: Record<string, string> = {
-  balanced: "⚖️",
-  "high-protein": "🍗",
-  "high protein": "🍗",
-  "low-carb": "🥑",
-  "low carb": "🥑",
-  vegetarian: "🥦",
-  vegan: "🥦",
-  "chef's picks": "👨‍🍳",
-  chefs_picks: "👨‍🍳",
-  custom: "🏋️",
-  "custom macros": "🏋️",
-  keto: "🥑",
-  lose_weight: "⚖️",
-  gain_muscle: "🍗",
-  muscle_gain: "🍗",
-  high_protein: "🍗",
-  maintain: "⚖️",
+  "fat loss": "🔥",
+  fat_loss: "🔥",
+  lose_weight: "🔥",
+  "muscle gain": "💪",
+  muscle_gain: "💪",
+  gain_muscle: "💪",
+  "balanced diet": "🥗",
+  balanced: "🥗",
+  maintain: "🥗",
+  diabetic: "❤️",
+  "diabetic friendly": "❤️",
+  detox: "🌿",
+  "body detox": "🌿",
+  gut: "🦠",
+  "gut health": "🦠",
+  "age reverse": "⏳",
+  age_reverse: "⏳",
+  custom: "👨‍🍳",
+  "customized meal plan": "👨‍🍳",
+  "custom macros": "👨‍🍳",
+  special: "🌸",
+  "special care": "🌸",
+  pcos: "🌸",
+  pcod: "🌸",
 };
 
 interface BackendPlan {
@@ -68,21 +74,25 @@ interface Cycle {
 }
 
 const FALLBACK_PLAN_TYPES: PlanType[] = [
-  { id: "balanced", title: "Balanced", desc: "Provides the nutrients your body needs to thrive", emoji: "⚖️", style: "default" },
-  { id: "custom", title: "Custom Macros", desc: "Designed for athletes and fitness focused individuals", emoji: "🏋️", style: "custom" },
-  { id: "chef", title: "Chef's Picks", desc: "Dishes crafted for your cravings, not your fitness goals", emoji: "👨‍🍳", style: "default" },
-  { id: "low-carb", title: "Low-Carb", desc: "Low in carbs, but high in healthy fats, and non-starchy veggies", emoji: "🥑", style: "default" },
-  { id: "high-protein", title: "High Protein", desc: "Boosts muscle strength and vitality with lean proteins", emoji: "🍗", style: "default" },
-  { id: "vegetarian", title: "Vegetarian", desc: "Plant-based dishes with colorful veggies and hearty grains", emoji: "🥦", style: "default" },
+  { id: "fat-loss", title: "Fat Loss", desc: "Calorie-controlled meals that melt fat, not muscle", emoji: "🔥", style: "default" },
+  { id: "muscle-gain", title: "Muscle Gain", desc: "Protein-forward plates built for strength", emoji: "💪", style: "default" },
+  { id: "balanced", title: "Balanced Diet", desc: "Everyday nutrition, perfectly proportioned", emoji: "🥗", style: "default" },
+  { id: "diabetic", title: "Diabetic Friendly", desc: "Low-GI meals that keep blood sugar steady", emoji: "❤️", style: "default" },
+  { id: "detox", title: "Body Detox", desc: "Clean, plant-rich meals that reset your system", emoji: "🌿", style: "default" },
+  { id: "gut", title: "Gut Health", desc: "Fibre and ferment-rich food for a happy gut", emoji: "🦠", style: "default" },
+  { id: "age", title: "Age Reverse", desc: "Antioxidant-dense menus for longevity", emoji: "⏳", style: "default" },
+  { id: "custom", title: "Customized Meal Plan", desc: "Built with our chef around your exact needs", emoji: "👨‍🍳", style: "custom" },
+  { id: "special", title: "Special Care", desc: "PCOD / PCOS · Thyroid · Pregnancy support", emoji: "🌸", style: "default" },
 ];
 
-const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
-const DAYS = ["S", "M", "T", "W", "T", "F", "S"];
+/** New pricing model: price = per-meal rate × meals/day × days. */
+const MEALS_PER_DAY_OPTIONS = [2, 3, 4, 5];
 
 const FALLBACK_CYCLES: Cycle[] = [
-  { id: "7", title: "1 week", subtext: "Per week", priceDisplay: "/week", save: null, amount: 0 },
-  { id: "14", title: "2 weeks", subtext: "Per 2 weeks", priceDisplay: "/2 weeks", save: null, amount: 0 },
-  { id: "28", title: "4 weeks", subtext: "Per 4 weeks", priceDisplay: "/month", save: null, amount: 0 },
+  { id: "20", title: "20 days", subtext: "Programme length", priceDisplay: "—", save: null, amount: 0 },
+  { id: "24", title: "24 days", subtext: "Programme length", priceDisplay: "—", save: null, amount: 0 },
+  { id: "30", title: "30 days", subtext: "Programme length", priceDisplay: "—", save: null, amount: 0 },
+  { id: "90", title: "90 days", subtext: "Programme length", priceDisplay: "—", save: null, amount: 0 },
 ];
 
 const PLANS_SUB_BANNER_DISMISSED_KEY = "nutrichef_plans_sub_banner_dismissed";
@@ -140,17 +150,28 @@ function buildPlanDescription(goalType?: string, dietType?: string): string {
   return goal || diet || "Customized meal plan";
 }
 
+/** Per-slot prices are stored as `perMealRate × days`; total = slot price × meals/day. */
+function slotPriceForDuration(
+  pricing: NonNullable<BackendPlan["pricing"]>,
+  dur: string
+): number | null {
+  for (const slot of ["lunch", "breakfast", "dinner"] as const) {
+    const v = pricing[slot]?.[dur];
+    if (v != null && v > 0) return v;
+  }
+  return null;
+}
+
 function buildCycles(
   pricing: BackendPlan["pricing"],
-  selectedMeals: string[],
+  mealsPerDay: number,
   currency: string
 ): { cycles: Cycle[]; unsupportedLegacyOnly: boolean } {
   if (!pricing) {
     return { cycles: FALLBACK_CYCLES, unsupportedLegacyOnly: false };
   }
 
-  const mealKeys = selectedMeals.map((m) => m.toLowerCase());
-  const raw = collectRawDurationKeysFromPricing(pricing, mealKeys);
+  const raw = collectRawDurationKeysFromPricing(pricing, ["breakfast", "lunch", "dinner"]);
   const sorted = supportedDurationKeysPresent(raw);
 
   if (sorted.length === 0) {
@@ -160,40 +181,28 @@ function buildCycles(
     return { cycles: FALLBACK_CYCLES, unsupportedLegacyOnly: false };
   }
 
-  const cycles: Cycle[] = sorted.map((dur) => {
-    let total = 0;
-    for (const mk of mealKeys) {
-      const tierObj = pricing[mk as keyof NonNullable<BackendPlan["pricing"]>];
-      if (tierObj && tierObj[dur] != null) {
-        total += tierObj[dur];
-      }
-    }
-    const weeksInPeriod = billingWeeksForDurationKey(dur) ?? 1;
-    const perWeekRounded = Math.round(total / weeksInPeriod);
-    return {
+  const cycles: Cycle[] = [];
+  for (const dur of sorted) {
+    const slotPrice = slotPriceForDuration(pricing, dur);
+    const days = daysForDurationKey(dur);
+    if (slotPrice == null || days == null) continue;
+    const total = slotPrice * mealsPerDay;
+    const perMeal = total / (mealsPerDay * days);
+    cycles.push({
       id: dur,
       title: planDurationListTitle(dur),
-      subtext: `${formatMajorUnits(total, currency)} ${planDurationPeriodPhrase(dur)}`,
-      priceDisplay: `${formatMajorUnits(perWeekRounded, currency)}/week`,
+      subtext: `${formatMajorUnits(total, currency)} for ${days} days`,
+      priceDisplay: `${formatMajorUnits(perMeal, currency, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      })}/meal`,
       save: null,
       amount: Math.round(total * 100),
-    };
-  });
+    });
+  }
 
-  if (cycles.length > 1) {
-    const w0 = billingWeeksForDurationKey(cycles[0].id) ?? 1;
-    const basePerWeek = cycles[0].amount / 100 / w0;
-    for (let i = 1; i < cycles.length; i++) {
-      const weeks = billingWeeksForDurationKey(cycles[i].id) ?? 1;
-      const thisPerWeek = cycles[i].amount / 100 / weeks;
-      const saving = Math.round((basePerWeek - thisPerWeek) * weeks);
-      if (saving > 0) {
-        cycles[i].save = formatMajorUnits(saving, currency, {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0,
-        });
-      }
-    }
+  if (cycles.length === 0) {
+    return { cycles: [], unsupportedLegacyOnly: true };
   }
 
   return { cycles, unsupportedLegacyOnly: false };
@@ -208,8 +217,7 @@ export default function PlansPage() {
   const [backendPlans, setBackendPlans] = useState<BackendPlan[]>([]);
   const [planTypes, setPlanTypes] = useState<PlanType[]>(FALLBACK_PLAN_TYPES);
   const [selectedPlan, setSelectedPlan] = useState("");
-  const [selectedMeals, setSelectedMeals] = useState<string[]>(["Lunch", "Snack"]);
-  const [selectedDays, setSelectedDays] = useState<number[]>([0, 1, 2, 3, 4]);
+  const [mealsPerDay, setMealsPerDay] = useState<number>(3);
   const [selectedCycle, setSelectedCycle] = useState("");
   const [cycles, setCycles] = useState<Cycle[]>(FALLBACK_CYCLES);
   const [unsupportedDurationTiers, setUnsupportedDurationTiers] = useState(false);
@@ -299,7 +307,7 @@ export default function PlansPage() {
       }
       return;
     }
-    const { cycles: c, unsupportedLegacyOnly } = buildCycles(plan.pricing, selectedMeals, currency);
+    const { cycles: c, unsupportedLegacyOnly } = buildCycles(plan.pricing, mealsPerDay, currency);
     setCycles(c);
     setUnsupportedDurationTiers(unsupportedLegacyOnly);
     if (c.length > 0 && !c.find((cy) => cy.id === selectedCycle)) {
@@ -308,19 +316,7 @@ export default function PlansPage() {
     if (c.length === 0) {
       setSelectedCycle("");
     }
-  }, [selectedPlan, selectedMeals, backendPlans, selectedCycle, currency]);
-
-  const toggleMeal = (meal: string) => {
-    setSelectedMeals((prev) =>
-      prev.includes(meal) ? prev.filter((m) => m !== meal) : [...prev, meal]
-    );
-  };
-
-  const toggleDay = (idx: number) => {
-    setSelectedDays((prev) =>
-      prev.includes(idx) ? prev.filter((d) => d !== idx) : [...prev, idx].sort()
-    );
-  };
+  }, [selectedPlan, mealsPerDay, backendPlans, selectedCycle, currency]);
 
   const getSelectedPlanTitle = () =>
     planTypes.find((p) => p.id === selectedPlan)?.title || "";
@@ -348,7 +344,7 @@ export default function PlansPage() {
           templateId,
           amount: cycle.amount,
           currency: currency.toLowerCase(),
-          productName: `${getSelectedPlanTitle()} - ${durationLabel}`,
+          productName: `${getSelectedPlanTitle()} — ${durationLabel} · ${mealsPerDay} meals/day`,
           successUrl: `${window.location.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
           cancelUrl: `${window.location.origin}/payment/cancel`,
           /** Ask Stripe to always attach a Customer so /payment/success can resolve stripeCustomerId. */
@@ -542,83 +538,38 @@ export default function PlansPage() {
               )}
             </section>
 
-            {/* Section 2: Meal Count */}
+            {/* Section 2: Meals per day (pricing = rate × meals × days) */}
             <section>
               <h2 className="font-heading mb-2 text-[26px] font-semibold tracking-tight text-foreground">
                 How many meals per day?
               </h2>
               <p className="mb-6 text-[14px] font-medium text-secondary-text">
-                Select a minimum of 2 meals, including lunch or dinner.
+                Our chefs compose your day around your count — mains, sides, and
+                snacks included.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-[18px]">
-                {MEAL_TYPES.map((meal) => {
-                  const isActive = selectedMeals.includes(meal);
+              <div className="grid grid-cols-2 gap-[18px] sm:grid-cols-4">
+                {MEALS_PER_DAY_OPTIONS.map((count) => {
+                  const isActive = mealsPerDay === count;
                   return (
-                    <div
-                      key={meal}
-                      onClick={() => toggleMeal(meal)}
-                      className={`flex cursor-pointer items-center justify-between rounded-[16px] border-2 px-5 py-[18px] transition-colors ${
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => setMealsPerDay(count)}
+                      className={`flex cursor-pointer flex-col items-center justify-center rounded-[16px] border-2 px-5 py-6 transition-colors ${
                         isActive
                           ? "border-primary bg-primary/10"
                           : "border-border-subtle bg-surface shadow-sm hover:border-foreground/15"
                       }`}
                     >
-                      <span className="text-[15px] font-semibold text-foreground">
-                        {meal}
+                      <span className="font-heading text-[28px] font-semibold leading-none text-foreground">
+                        {count}
                       </span>
-                      {isActive ? (
-                        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border-2 border-primary bg-primary">
-                          <svg
-                            className="w-3.5 h-3.5 text-white"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                          </svg>
-                        </div>
-                      ) : (
-                        <div className="h-6 w-6 flex-shrink-0 rounded-full border-2 border-border-subtle bg-surface" />
-                      )}
-                    </div>
+                      <span className="mt-2 text-[13px] font-semibold text-secondary-text">
+                        meals / day
+                      </span>
+                    </button>
                   );
                 })}
-              </div>
-            </section>
-
-            {/* Section 3: Days a Week */}
-            <section>
-              <h2 className="font-heading mb-2 text-[26px] font-semibold tracking-tight text-foreground">
-                How many days a week are you eating
-                <br />
-                Nutrichef?
-              </h2>
-              <p className="mb-8 text-[14px] font-medium text-secondary-text">
-                Select a minimum of 5 days
-              </p>
-              <div className="-mx-1 px-1 overflow-x-auto pb-1 [scrollbar-width:thin]">
-                <div className="flex w-max gap-2 sm:w-full sm:justify-between sm:gap-3 md:gap-[12px]">
-                  {DAYS.map((day, idx) => {
-                    const isActive = selectedDays.includes(idx);
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => toggleDay(idx)}
-                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[14px] font-semibold transition-all duration-200 sm:h-[46px] sm:w-[46px] sm:text-[15px] ${
-                          isActive
-                            ? "bg-primary text-white shadow-sm"
-                            : "bg-bg-light text-secondary-text hover:bg-foreground/10"
-                        }`}
-                      >
-                        {day}
-                      </button>
-                    );
-                  })}
-                </div>
               </div>
             </section>
 
@@ -633,8 +584,8 @@ export default function PlansPage() {
                   role="status"
                 >
                   This plan&apos;s pricing is still on an older format we no longer support here. Please refresh
-                  later or pick another plan. Once plans are re-saved in admin, 1, 2, and 4 week options
-                  (7, 14, and 28 days) will appear.
+                  later or pick another plan. Once plans are re-saved in admin, the 20, 24, 30, and 90-day
+                  programmes will appear.
                 </p>
               ) : null}
               <div className="flex flex-col gap-[18px] mb-[24px]">
@@ -696,10 +647,8 @@ export default function PlansPage() {
                       Your package, your way
                     </h3>
                     <p className="text-[13.5px] font-semibold leading-[1.6] text-secondary-text">
-                      {getSelectedPlanTitle()},{" "}
-                      {selectedMeals.length} Meal
-                      {selectedMeals.length !== 1 ? "s" : ""},{" "}
-                      {selectedDays.length} days per week
+                      {getSelectedPlanTitle()}, {mealsPerDay} meals/day
+                      {selectedCycle ? `, ${getCurrentCycle()?.title ?? ""}` : ""}
                     </p>
                   </div>
                   <div className="relative flex h-[64px] w-[64px] shrink-0 items-center justify-center rounded-[16px] bg-surface font-black shadow-sm">
@@ -740,24 +689,15 @@ export default function PlansPage() {
                   </button>
                 </div>
 
-                {/* Subscription Coupon */}
-                <div className="mb-10 flex items-center justify-between rounded-[14px] border border-dashed border-border-subtle bg-surface p-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="mt-1 -rotate-12 transform rounded-sm bg-primary px-[6px] py-[1.5px] text-[8px] font-black italic text-white">
-                      🎟️
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="mb-0.5 text-[12.5px] font-semibold leading-[1.3] text-foreground">
-                        10% off subscription
-                      </span>
-                      <span className="text-[11px] font-semibold tracking-tight text-secondary-text">
-                        with 6+ days/week on your package.
-                      </span>
-                    </div>
-                  </div>
-                  <div className="ml-2 flex h-[30px] w-[30px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary/15 text-[18px] font-bold text-primary">
-                    +
-                  </div>
+                {/* Rate note */}
+                <div className="mb-10 flex items-center gap-3 rounded-[14px] border border-dashed border-border-subtle bg-surface p-4">
+                  <span className="text-[18px]" aria-hidden>
+                    👨‍🍳
+                  </span>
+                  <span className="text-[12px] font-semibold leading-[1.5] text-secondary-text">
+                    Every programme includes free morning delivery and
+                    nutritionist sign-off.
+                  </span>
                 </div>
 
                 {/* Payment Summary */}

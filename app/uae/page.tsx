@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { MarketLanding } from "@/components/markets/MarketLanding";
 import { buildPageMetadata } from "@/lib/metadata";
 import { getRegion } from "@/lib/regions";
-import { STARTING_PRICE_PER_DAY_AED } from "@/lib/site-config";
+import { STARTING_PRICE_PER_MEAL_AED } from "@/lib/site-config";
 
 const region = getRegion("ae");
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Premium Meal Plan Delivery UAE | Dubai, Abu Dhabi & Sharjah — NutriChef",
-  description: `Private-chef meal plans delivered fresh every morning across Dubai, Abu Dhabi & Sharjah. 80+ rotating dishes, nutritionist-signed macros, delivery before 10 AM. From AED ${STARTING_PRICE_PER_DAY_AED}/day — pause anytime.`,
+  description: `Private-chef meal plans delivered fresh every morning across Dubai, Abu Dhabi & Sharjah. 80+ rotating dishes, nutritionist-signed macros, delivery before 10 AM. From AED ${STARTING_PRICE_PER_MEAL_AED}/meal — pause anytime.`,
   path: region.path,
   keywords: [
     "meal plan delivery UAE",

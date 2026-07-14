@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { buildPageMetadata } from "@/lib/metadata";
-import { STARTING_PRICE_PER_DAY_AED, whatsappLink } from "@/lib/site-config";
+import { STARTING_PRICE_PER_MEAL_AED, whatsappLink } from "@/lib/site-config";
 import { REGIONS } from "@/lib/regions";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Subscribe & Save — Private-Chef Meal Plans from AED 99/Day | NutriChef",
-  description: `Subscribe to NutriChef and put your nutrition on autopilot. Chef-crafted meals from AED ${STARTING_PRICE_PER_DAY_AED}/day, longer plans unlock preferential rates, pause anytime. Delivering across the UAE — KSA, Qatar & Kuwait next.`,
+  title: "Subscribe & Save — Private-Chef Meal Plans from AED 45/Meal | NutriChef",
+  description: `Subscribe to NutriChef and put your nutrition on autopilot. Chef-crafted meals from AED ${STARTING_PRICE_PER_MEAL_AED}/meal across 20, 24, 30 & 90-day programmes. Pause anytime. Delivering across the UAE — KSA, Qatar & Kuwait next.`,
   path: "/subscribe",
   keywords: [
     "meal plan subscription Dubai",
@@ -18,41 +18,41 @@ export const metadata: Metadata = buildPageMetadata({
 
 const tiers = [
   {
-    length: "1 week",
-    label: "The Trial",
-    body: "Taste the standard. Seven days of chef-crafted precision — enough to feel the difference in your energy by Friday.",
+    length: "20 days",
+    label: "The Kickstart",
+    body: "Three weeks to feel the difference.",
     highlight: false,
   },
   {
-    length: "2 weeks",
-    label: "The Habit",
-    body: "Two weeks locks in the rhythm: mornings without decisions, macros without maths, and preferential pricing over weekly billing.",
-    highlight: false,
-  },
-  {
-    length: "4 weeks",
+    length: "30 days",
     label: "The Standard",
-    body: "Our members' choice. A full month on retainer at our best rate — the way the busiest people in the Emirates run their nutrition.",
+    body: "A full month on retainer — our members' choice.",
     highlight: true,
+  },
+  {
+    length: "90 days",
+    label: "The Transformation",
+    body: "A whole season of done-for-you nutrition.",
+    highlight: false,
   },
 ];
 
 const assurances = [
   {
     title: "Pause anytime",
-    body: "Travelling? Freeze your plan from the dashboard in one tap. Days are never lost.",
+    body: "Freeze your plan in one tap. Days are never lost.",
   },
   {
     title: "No lock-in",
-    body: "Cancel whenever you like, penalty-free. We keep you by being excellent, not by contract.",
+    body: "Cancel anytime, penalty-free.",
   },
   {
     title: "Concierge on WhatsApp",
-    body: "A human answers. Address changes, allergy notes, extra guests — handled in minutes.",
+    body: "A human answers on WhatsApp, in minutes.",
   },
   {
     title: "Secure checkout",
-    body: "Payments run on Stripe with full card security. No card details ever touch our servers.",
+    body: "Payments run on Stripe. Fully secure.",
   },
 ];
 
@@ -69,16 +69,15 @@ export default function SubscribePage() {
             Put your nutrition on retainer.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/75 sm:text-xl">
-            One decision today replaces a thousand small ones — every menu, every
-            macro, every morning, handled. From AED {STARTING_PRICE_PER_DAY_AED}{" "}
-            a day, with better rates the longer you commit.
+            One decision replaces a thousand small ones. From AED{" "}
+            {STARTING_PRICE_PER_MEAL_AED} a meal, in 20 to 90-day programmes.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link
               href="/plans"
               className="inline-flex h-14 items-center justify-center rounded-full bg-primary px-9 text-base font-semibold text-white shadow-lg shadow-black/20 transition hover:bg-primary-hover"
             >
-              Build my subscription
+              Start my plan
             </Link>
             <a
               href={whatsappLink("Hi NutriChef, help me choose the right subscription.")}
@@ -99,8 +98,7 @@ export default function SubscribePage() {
             Choose your commitment
           </h2>
           <p className="mt-4 max-w-2xl text-lg text-secondary-text">
-            Every tier includes the full 80+ dish rotation, nutritionist-signed
-            macros, and morning delivery. Longer terms simply cost less per week.
+            Every programme includes the full menu, 2–5 meals a day, and free morning delivery. 24-day plans are also available in the builder.
           </p>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {tiers.map((tier) => (

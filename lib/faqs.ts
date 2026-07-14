@@ -1,4 +1,4 @@
-import { STARTING_PRICE_PER_DAY_AED } from "./site-config";
+import { STARTING_PRICE_PER_MEAL_AED } from "./site-config";
 
 export interface FaqItem {
   question: string;
@@ -13,7 +13,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     question: "How much does a NutriChef meal plan cost in Dubai and the UAE?",
-    answer: `Plans start from AED ${STARTING_PRICE_PER_DAY_AED} per day — less than a single business lunch in DIFC — with delivery included across Dubai, Abu Dhabi, and Sharjah. Your exact price depends on your goal, meals per day, and subscription length, and longer commitments unlock preferential rates. There are no hidden fees and no lock-in contracts. Build your exact plan and see live pricing at nutrichef.ae/plans.`,
+    answer: `Simple, transparent pricing: AED ${STARTING_PRICE_PER_MEAL_AED} per meal on Fat Loss and AED 50 per meal on every other programme, multiplied by your meals per day (2–5) and programme length (20, 24, 30, or 90 days). A 3-meal, 20-day Fat Loss plan is AED 2,700 — delivery included, no hidden fees, no lock-in. See live pricing at nutrichef.ae/plans.`,
   },
   {
     question: "Which areas does NutriChef deliver to in the UAE?",
@@ -28,7 +28,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Can NutriChef build a plan around my exact macros and goals?",
     answer:
-      "Yes — that's the core of what we do. Whether you're cutting for a triathlon, building muscle, managing energy through a brutal travel schedule, or simply eating impeccably, our Head Nutritionist calibrates your calories, protein, carbs, and fat to your body and ambition. Choose High Protein, Low Carb, Balanced, Chef's Picks, or go fully bespoke with Custom Macros.",
+      "Yes — that's the core of what we do. Choose from nine programmes — Fat Loss, Muscle Gain, Balanced Diet, Diabetic Friendly, Body Detox, Gut Health, Age Reverse, a fully Customized Meal Plan, or our Special Care plan for PCOD/PCOS, thyroid, and pregnancy — and our Head Nutritionist calibrates every meal to your body and goals.",
   },
   {
     question: "Are the meals actually restaurant quality?",

@@ -53,7 +53,7 @@ export const exampleBlogPost: BlogPost = {
   ] satisfies BlogBlock[],
   cta: {
     heading: "Ready to try NutriChef?",
-    text: "Explore plans from AED 99/day — pause or cancel anytime.",
+    text: "Explore plans from AED 45/meal — pause or cancel anytime.",
     buttonLabel: "See plans",
     buttonHref: "/plans",
   },

@@ -46,6 +46,55 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Hero media: wide client images need a different focal point on tall phone
+   screens than on desktop. Per-slide values come in via CSS custom props. */
+.hero-media {
+  object-position: var(--pos-mobile, center);
+}
+@media (min-width: 1024px) {
+  .hero-media {
+    object-position: var(--pos-desktop, center);
+  }
+}
+
+/* Hero slider: copy rises in on every slide change (keyed remount).
+   Pure CSS so it plays even where requestAnimationFrame is throttled. */
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes hero-dot-fill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+.hero-slide-copy > * {
+  animation: hero-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.hero-slide-copy > *:nth-child(2) {
+  animation-delay: 0.12s;
+}
+.hero-slide-copy > *:nth-child(3) {
+  animation-delay: 0.24s;
+}
+.hero-slide-copy > *:nth-child(4) {
+  animation-delay: 0.36s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide-copy > * {
+    animation: none;
+  }
+}
+
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;

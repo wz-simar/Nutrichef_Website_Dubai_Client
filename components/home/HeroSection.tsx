@@ -1,306 +1,186 @@
 "use client";
 
-import React, { useLayoutEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { guardAgainstRafStall } from "@/lib/gsapStallGuard";
+import { HERO_SLIDES } from "@/lib/heroMedia";
 
-/** Moody fine-dining table — blended into the emerald canvas, editorial not stock. */
-const HERO_BACKDROP =
-  "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=2200&q=80";
-
-const HEADLINE_LINES = ["Your Private Chef.", "Your Nutritionist.", "At Your Door by 10 AM."];
-
-const FLOATING_CARDS = [
-  {
-    id: "salmon",
-    title: "Miso-Glazed Salmon",
-    kcal: "560 kcal",
-    macro: "42g protein",
-    time: "Delivered 7:42 AM",
-    image:
-      "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    id: "wagyu",
-    title: "Wagyu Beef Bowl",
-    kcal: "610 kcal",
-    macro: "44g protein",
-    time: "Delivered 8:05 AM",
-    image:
-      "https://images.unsplash.com/photo-1432139555190-58524dae6a55?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    id: "acai",
-    title: "Acai Power Bowl",
-    kcal: "380 kcal",
-    macro: "14g protein",
-    time: "Delivered 6:58 AM",
-    image:
-      "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=600&q=80",
-  },
-] as const;
-
-const STATS = [
-  { value: 290, suffix: "K", label: "members worldwide" },
-  { value: 19, suffix: "M", label: "meals delivered" },
-  { value: 4, suffix: "", label: "GCC markets, UAE first" },
-] as const;
-
+/**
+ * Full-screen hero: client photos/videos with per-slide copy.
+ * Video slides play through to the end (`ended` event) before advancing;
+ * image slides hold for their configured duration. Crossfade + text
+ * animations are pure CSS (keyed remount), so the hero renders and rotates
+ * even where requestAnimationFrame is throttled.
+ */
 export const HeroSection = () => {
   const router = useRouter();
-  const scope = useRef<HTMLElement>(null);
+  const [slide, setSlide] = useState(0);
+  /** Real video durations (s), learned from metadata — drives the dot fill. */
+  const [videoDurs, setVideoDurs] = useState<Record<number, number>>({});
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const slideRef = useRef(0);
+  slideRef.current = slide;
 
-  useLayoutEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
+  const current = HERO_SLIDES[slide];
+  const isVideoSlide = current.media.type === "video";
 
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const goNext = useCallback(
+    () => setSlide((s) => (s + 1) % HERO_SLIDES.length),
+    []
+  );
 
-    const ctx = gsap.context((self) => {
-      if (reduceMotion) return;
+  // Image slides: fixed hold. Video slides: the `ended` event advances;
+  // the timer here is only a safety net (duration + buffer) in case the
+  // video stalls and `ended` never fires.
+  useEffect(() => {
+    if (HERO_SLIDES.length < 2) return;
+    const holdMs = isVideoSlide
+      ? ((videoDurs[slide] ?? 70) + 6) * 1000
+      : current.durationMs;
+    const id = window.setTimeout(goNext, holdMs);
+    return () => window.clearTimeout(id);
+  }, [slide, isVideoSlide, current.durationMs, videoDurs, goNext]);
 
-      // ── Entrance timeline ────────────────────────────────────────────
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+  // The active video restarts from the top and plays; the rest pause.
+  useEffect(() => {
+    videoRefs.current.forEach((v, i) => {
+      if (!v) return;
+      if (i === slide) {
+        try {
+          v.currentTime = 0;
+        } catch {
+          /* metadata not ready yet */
+        }
+        void v.play().catch(() => {});
+      } else {
+        v.pause();
+      }
+    });
+  }, [slide]);
 
-      tl.fromTo(
-        "[data-hero-bg]",
-        { scale: 1.12, autoAlpha: 0.65 },
-        { scale: 1, autoAlpha: 1, duration: 2.2, ease: "power2.out" },
-        0
-      );
+  const go = (dir: 1 | -1) =>
+    setSlide((s) => (s + dir + HERO_SLIDES.length) % HERO_SLIDES.length);
 
-      tl.fromTo(
-        "[data-hero-eyebrow-rule]",
-        { scaleX: 0 },
-        { scaleX: 1, duration: 0.9, transformOrigin: "left center" },
-        0.35
-      );
-      tl.fromTo(
-        "[data-hero-eyebrow]",
-        { autoAlpha: 0, x: -24 },
-        { autoAlpha: 1, x: 0, duration: 0.8 },
-        0.4
-      );
-
-      // Masked line-by-line headline reveal
-      tl.fromTo(
-        "[data-hero-line-inner]",
-        { yPercent: 110 },
-        { yPercent: 0, duration: 1.05, stagger: 0.14, ease: "power4.out" },
-        0.55
-      );
-
-      tl.fromTo(
-        "[data-hero-fade]",
-        { autoAlpha: 0, y: 28 },
-        { autoAlpha: 1, y: 0, duration: 0.85, stagger: 0.12 },
-        1.15
-      );
-
-      // Floating dish cards: staggered entrance
-      tl.fromTo(
-        "[data-hero-card]",
-        { autoAlpha: 0, y: 60, scale: 0.9, rotate: 0 },
-        {
-          autoAlpha: 1,
-          y: 0,
-          scale: 1,
-          rotate: (i) => [-4, 3, -2][i] ?? 0,
-          duration: 1.1,
-          stagger: 0.16,
-          ease: "back.out(1.4)",
-        },
-        1.2
-      );
-
-      // Count-up stats
-      const counters = self.selector?.("[data-hero-count]") as HTMLElement[] | undefined;
-      counters?.forEach((el, i) => {
-        const target = STATS[i]?.value ?? 0;
-        const suffix = STATS[i]?.suffix ?? "";
-        const obj = { v: 0 };
-        tl.to(
-          obj,
-          {
-            v: target,
-            duration: 1.6,
-            ease: "power2.out",
-            onUpdate: () => {
-              el.textContent = `${Math.round(obj.v)}${suffix}`;
-            },
-          },
-          1.45
-        );
-      });
-
-      // ── Ambient motion ───────────────────────────────────────────────
-      gsap.utils.toArray<HTMLElement>("[data-hero-card]").forEach((card, i) => {
-        gsap.to(card, {
-          y: `+=${[14, -12, 10][i] ?? 12}`,
-          duration: 2.6 + i * 0.5,
-          repeat: -1,
-          yoyo: true,
-          ease: "sine.inOut",
-          delay: 2.4 + i * 0.3,
-        });
-      });
-
-      gsap.to("[data-hero-scroll-dot]", {
-        y: 14,
-        duration: 1.1,
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut",
-      });
-
-      // ── Scroll parallax ──────────────────────────────────────────────
-      gsap.to("[data-hero-bg]", {
-        yPercent: 16,
-        ease: "none",
-        scrollTrigger: { trigger: scope.current, start: "top top", end: "bottom top", scrub: true },
-      });
-      gsap.utils.toArray<HTMLElement>("[data-hero-card]").forEach((card, i) => {
-        gsap.to(card, {
-          yPercent: [-26, -42, -18][i] ?? -25,
-          ease: "none",
-          scrollTrigger: {
-            trigger: scope.current,
-            start: "top top",
-            end: "bottom top",
-            scrub: true,
-          },
-        });
-      });
-      gsap.to("[data-hero-copy]", {
-        yPercent: -10,
-        autoAlpha: 0.25,
-        ease: "none",
-        scrollTrigger: { trigger: scope.current, start: "top top", end: "bottom top", scrub: true },
-      });
-    }, scope);
-
-    const clearGuard = guardAgainstRafStall(ctx);
-
-    return () => {
-      clearGuard();
-      ctx.revert();
-    };
-  }, []);
+  /** Dot progress duration: real video length for videos, hold time for images. */
+  const fillMsFor = (i: number): number => {
+    const s = HERO_SLIDES[i];
+    if (s.media.type === "video") {
+      return videoDurs[i] ? videoDurs[i] * 1000 : 0;
+    }
+    return s.durationMs;
+  };
 
   return (
     <section
       id="hero"
-      ref={scope}
-      className="relative isolate flex min-h-screen w-full items-center overflow-hidden bg-emerald-deep"
+      className="relative isolate h-[100svh] min-h-[560px] w-full overflow-hidden bg-emerald-deep"
     >
-      {/* Background: emerald base + moody dining photography blended in from the right */}
-      <div data-hero-bg className="absolute inset-0 -z-20 will-change-transform">
-        <div className="absolute inset-0 bg-emerald-deep" aria-hidden />
-        <Image
-          src={HERO_BACKDROP}
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-[70%_center] opacity-75"
-        />
-      </div>
-      {/* Cinematic grade: emerald wash left→right, settle into emerald at the base */}
-      <div
-        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#0d2117]/85 via-[#0d2117]/45 to-[#0d2117]/90 sm:bg-gradient-to-r sm:from-[#0d2117] sm:via-[#0d2117]/75 sm:to-[#0d2117]/25"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-48 bg-gradient-to-b from-transparent to-emerald-deep"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-44 bg-gradient-to-b from-[#06120c]/85 to-transparent"
-        aria-hidden
-      />
-      {/* Champagne glow behind the headline */}
-      <div
-        className="pointer-events-none absolute -left-32 top-1/4 -z-10 h-[480px] w-[640px]"
-        style={{
-          background:
-            "radial-gradient(closest-side, rgba(184,145,46,0.14), rgba(184,145,46,0) 70%)",
-        }}
-        aria-hidden
-      />
-      {/* Gold hairline at the very top */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-transparent via-gold/70 to-transparent"
-        aria-hidden
-      />
-
-      <div className="relative mx-auto w-full max-w-7xl px-5 pt-32 pb-24 sm:px-8 sm:pt-36 lg:px-10 lg:pt-36">
-        <div className="grid items-center gap-16 lg:grid-cols-12">
-          {/* ── Copy column ── */}
-          <div data-hero-copy className="max-w-2xl lg:col-span-7">
-            <div className="mb-6 flex items-center gap-4">
-              <span
-                data-hero-eyebrow-rule
-                className="h-px w-12 shrink-0 bg-gold"
-                aria-hidden
+      {/* ── Slides ── */}
+      {HERO_SLIDES.map((s, i) => {
+        const active = i === slide;
+        const posStyle = {
+          "--pos-mobile": s.objectPositionMobile ?? s.objectPosition ?? "center",
+          "--pos-desktop": s.objectPosition ?? "center",
+        } as React.CSSProperties;
+        return (
+          <div
+            key={`${s.media.src}`}
+            aria-hidden={!active}
+            className="absolute inset-0"
+            style={{
+              opacity: active ? 1 : 0,
+              // Photos get a slow drift; videos stay steady while they play.
+              transform:
+                active && s.media.type === "image" ? "scale(1.05)" : "scale(1)",
+              transition: "opacity 1s ease, transform 8s linear",
+            }}
+          >
+            {s.media.type === "video" ? (
+              <video
+                ref={(el) => {
+                  videoRefs.current[i] = el;
+                }}
+                src={s.media.src}
+                poster={s.media.poster}
+                muted
+                playsInline
+                autoPlay={i === 0}
+                preload={i === 0 ? "auto" : "metadata"}
+                className="hero-media h-full w-full object-cover"
+                style={posStyle}
+                aria-label={s.alt}
+                onLoadedMetadata={(e) => {
+                  const dur = e.currentTarget.duration;
+                  if (Number.isFinite(dur) && dur > 0) {
+                    setVideoDurs((prev) =>
+                      prev[i] ? prev : { ...prev, [i]: dur }
+                    );
+                  }
+                }}
+                onEnded={() => {
+                  if (slideRef.current === i) goNext();
+                }}
+                onError={() => {
+                  if (slideRef.current === i) goNext();
+                }}
               />
-              <p
-                data-hero-eyebrow
-                className="font-heading text-[0.6875rem] font-semibold uppercase tracking-[0.32em] text-gold-soft sm:text-xs"
-              >
-                🇦🇪 Dubai · Abu Dhabi · Sharjah — GCC-wide next
-              </p>
-            </div>
+            ) : (
+              <Image
+                src={s.media.src}
+                alt={s.alt}
+                fill
+                priority={i === 0}
+                sizes="100vw"
+                className="hero-media object-cover"
+                style={posStyle}
+              />
+            )}
+          </div>
+        );
+      })}
 
-            <h1 className="font-heading text-[2.7rem] font-semibold leading-[1.04] tracking-tight text-white sm:text-[3.4rem] lg:text-[3.9rem]">
-              {HEADLINE_LINES.map((line, i) => (
-                <span key={line} className="block overflow-hidden pb-[0.08em]">
-                  <span
-                    data-hero-line-inner
-                    className={`block will-change-transform ${
-                      i === 2
-                        ? "bg-gradient-to-r from-gold-soft via-[#f3e7c3] to-gold-soft bg-clip-text text-transparent"
-                        : ""
-                    }`}
-                  >
-                    {line}
-                  </span>
-                </span>
-              ))}
-            </h1>
+      {/* ── Scrims: navbar top + copy bottom ── */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-black/60 to-transparent"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-black/80 via-black/30 to-transparent"
+        aria-hidden
+      />
 
-            <p
-              data-hero-fade
-              className="mt-7 max-w-lg text-lg leading-relaxed text-white/80 sm:text-xl"
-            >
-              You didn&rsquo;t build your life to spend it counting calories. A chef&rsquo;s
-              brigade and a clinical nutritionist stand behind every meal —
-              engineered to your goals, ready in three minutes.
+      {/* ── Copy (remounts per slide → CSS animation replays) ── */}
+      <div className="absolute inset-x-0 bottom-0 z-10">
+        <div className="mx-auto max-w-7xl px-5 pb-24 sm:px-8 sm:pb-28 lg:px-10">
+          <div key={slide} className="hero-slide-copy max-w-2xl">
+            <p className="font-heading mb-4 text-[0.6875rem] font-semibold uppercase tracking-[0.3em] text-gold-soft sm:text-xs">
+              {current.eyebrow}
             </p>
 
-            <div data-hero-fade className="mt-5 flex flex-wrap items-center gap-2.5">
-              {["80+ rotating dishes", "Nutritionist-signed macros", "Pause anytime"].map(
-                (chip) => (
-                  <span
-                    key={chip}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3.5 py-1.5 text-[0.8125rem] font-semibold text-white/85 backdrop-blur-sm"
-                  >
-                    <span className="h-1 w-1 rounded-full bg-gold" aria-hidden />
-                    {chip}
-                  </span>
-                )
-              )}
-            </div>
+            {current.headline ? (
+              <h1 className="font-heading text-[2.6rem] font-semibold leading-[1.03] tracking-tight text-white sm:text-6xl lg:text-[4.2rem]">
+                {current.headline[0]}
+                <br />
+                <span className="bg-gradient-to-r from-gold-soft to-[#f3e7c3] bg-clip-text text-transparent">
+                  {current.headline[1]}
+                </span>
+              </h1>
+            ) : null}
 
-            <div data-hero-fade className="mt-10 flex flex-wrap items-center gap-4">
+            {current.sub ? (
+              <p className="mt-4 max-w-lg text-lg leading-relaxed text-white/85 sm:text-xl">
+                {current.sub}
+              </p>
+            ) : null}
+
+            <div className="mt-7 flex flex-wrap items-center gap-4">
               <button
                 type="button"
                 onClick={() => router.push("/plans")}
-                className="group inline-flex h-14 items-center gap-3 rounded-full bg-primary px-9 text-base font-semibold text-white shadow-[0_18px_44px_-12px_rgba(28,107,69,0.65)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary-hover hover:shadow-[0_22px_52px_-10px_rgba(28,107,69,0.8)]"
+                className="group inline-flex h-14 items-center gap-3 rounded-full bg-primary px-9 text-base font-semibold text-white shadow-[0_18px_44px_-12px_rgba(0,0,0,0.55)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary-hover"
               >
-                Design my plan
+                Start my plan
                 <span
                   className="inline-block transition-transform duration-300 group-hover:translate-x-1.5"
                   aria-hidden
@@ -310,93 +190,77 @@ export const HeroSection = () => {
               </button>
               <Link
                 href="/menu"
-                className="group inline-flex h-14 items-center gap-2 rounded-full border border-white/25 px-8 text-base font-semibold text-white/90 backdrop-blur-sm transition hover:border-gold-soft/60 hover:text-white"
+                className="inline-flex h-14 items-center rounded-full border border-white/35 px-8 text-base font-semibold text-white backdrop-blur-sm transition hover:border-white hover:bg-white/10"
               >
                 This week&rsquo;s menu
-                <span
-                  className="inline-block text-gold-soft transition-transform duration-300 group-hover:translate-x-1"
-                  aria-hidden
-                >
-                  →
-                </span>
               </Link>
             </div>
-
-            {/* Stats */}
-            <dl
-              data-hero-fade
-              className="mt-14 grid max-w-xl grid-cols-3 divide-x divide-white/12 border-t border-white/12 pt-8"
-            >
-              {STATS.map((stat, i) => (
-                <div key={stat.label} className={i === 0 ? "pr-6" : "px-6"}>
-                  <dt className="sr-only">{stat.label}</dt>
-                  <dd
-                    data-hero-count
-                    className="font-heading text-3xl font-semibold tabular-nums text-white sm:text-4xl"
-                  >
-                    {stat.value}
-                    {stat.suffix}
-                  </dd>
-                  <dd className="mt-1.5 text-[0.8125rem] leading-snug text-white/60">
-                    {stat.label}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-
-          {/* ── Floating dish cards (desktop) ── */}
-          <div className="relative hidden h-[560px] lg:col-span-5 lg:block" aria-hidden>
-            {FLOATING_CARDS.map((card, i) => (
-              <div
-                key={card.id}
-                data-hero-card
-                className={`absolute w-[248px] rounded-3xl border border-white/15 bg-white/[0.08] p-3 shadow-[0_32px_80px_-20px_rgba(0,0,0,0.65)] backdrop-blur-xl will-change-transform ${
-                  ["right-6 top-0", "left-0 top-[200px]", "right-0 top-[356px]"][i]
-                }`}
-              >
-                <div className="relative aspect-[16/11] overflow-hidden rounded-2xl">
-                  <Image
-                    src={card.image}
-                    alt=""
-                    fill
-                    sizes="248px"
-                    className="object-cover"
-                  />
-                  <span className="absolute left-2.5 top-2.5 rounded-full bg-emerald-deep/80 px-2.5 py-1 text-[0.625rem] font-bold uppercase tracking-wider text-gold-soft backdrop-blur">
-                    {card.kcal}
-                  </span>
-                </div>
-                <div className="px-1.5 pb-1.5 pt-3">
-                  <p className="font-heading text-[0.9375rem] font-semibold leading-snug text-white">
-                    {card.title}
-                  </p>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className="text-xs font-semibold text-white/65">{card.macro}</span>
-                    <span className="inline-flex items-center gap-1.5 text-[0.625rem] font-bold uppercase tracking-wide text-emerald-300/90">
-                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-                      {card.time}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
 
-      {/* Scroll cue */}
-      <div
-        data-hero-fade
-        className="absolute bottom-7 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-2 sm:flex"
-        aria-hidden
-      >
-        <span className="text-[0.625rem] font-bold uppercase tracking-[0.3em] text-white/45">
-          Scroll
-        </span>
-        <span className="flex h-9 w-[22px] items-start justify-center rounded-full border border-white/25 p-1.5">
-          <span data-hero-scroll-dot className="h-1.5 w-1.5 rounded-full bg-gold-soft" />
-        </span>
+      {/* ── Controls ── */}
+      <div className="absolute inset-x-0 bottom-0 z-10">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 pb-6 sm:px-8 lg:px-10">
+          {/* Dots with progress fill */}
+          <div className="flex items-center gap-2.5" role="tablist" aria-label="Hero slides">
+            {HERO_SLIDES.map((s, i) => {
+              const active = i === slide;
+              const fillMs = fillMsFor(i);
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  aria-label={`Slide ${i + 1}: ${s.eyebrow}`}
+                  onClick={() => setSlide(i)}
+                  className={`relative h-[5px] overflow-hidden rounded-full transition-all duration-300 ${
+                    active ? "w-12 bg-white/30" : "w-5 bg-white/30 hover:bg-white/50"
+                  }`}
+                >
+                  {active ? (
+                    <span
+                      key={`fill-${slide}-${fillMs}`}
+                      className="absolute inset-y-0 left-0 rounded-full bg-white"
+                      style={
+                        fillMs > 0
+                          ? { animation: `hero-dot-fill ${fillMs}ms linear forwards` }
+                          : { width: "30%" }
+                      }
+                    />
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Arrows */}
+          <div className="flex gap-2">
+            {([-1, 1] as const).map((dir) => (
+              <button
+                key={dir}
+                type="button"
+                aria-label={dir === -1 ? "Previous slide" : "Next slide"}
+                onClick={() => go(dir)}
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white backdrop-blur transition hover:bg-white/25"
+              >
+                <svg
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  {dir === -1 ? <path d="m15 18-6-6 6-6" /> : <path d="m9 18 6-6-6-6" />}
+                </svg>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -8,7 +8,7 @@ import { whatsappLink } from "@/lib/site-config";
 export const metadata: Metadata = buildPageMetadata({
   title: "FAQ — Private-Chef Meal Plans in Dubai, UAE & the GCC | NutriChef",
   description:
-    "Everything discerning clients ask before subscribing to NutriChef: pricing from AED 99/day, delivery areas across Dubai, Abu Dhabi & Sharjah, custom macros, pause & cancel policy, and GCC expansion to KSA, Qatar & Kuwait.",
+    "Everything discerning clients ask before subscribing to NutriChef: pricing from AED 45/meal, delivery areas across Dubai, Abu Dhabi & Sharjah, custom macros, pause & cancel policy, and GCC expansion to KSA, Qatar & Kuwait.",
   path: "/faq",
   keywords: [
     "NutriChef FAQ",

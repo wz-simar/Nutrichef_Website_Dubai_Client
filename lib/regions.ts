@@ -38,7 +38,7 @@ export const REGIONS: Region[] = [
     currency: "AED",
     locales: ["en-AE", "ar-AE"],
     path: "/uae",
-    cities: ["Dubai", "Abu Dhabi", "Sharjah"],
+    cities: ["Dubai", "Abu Dhabi", "Sharjah", "Ajman"],
     status: "live",
     tagline:
       "Our flagship kitchen. Private-chef nutrition delivered every morning across Dubai, Abu Dhabi, and Sharjah.",

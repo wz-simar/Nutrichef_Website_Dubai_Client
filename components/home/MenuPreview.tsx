@@ -79,9 +79,7 @@ function MacroBar({ meal }: { meal: PreviewMeal }) {
   const f = meal.fat ?? 0;
   const total = p + c + f;
   if (total <= 0) {
-    return (
-      <p className="text-xs font-medium text-white/45">Macros on request</p>
-    );
+    return <p className="text-xs font-medium text-white/45">Macros on request</p>;
   }
   const seg = (v: number) => `${Math.max(4, Math.round((v / total) * 100))}%`;
   return (
@@ -105,7 +103,6 @@ export const MenuPreview = () => {
   const [meals, setMeals] = useState<PreviewMeal[]>([]);
   const [loading, setLoading] = useState(true);
   const scope = useRef<HTMLElement>(null);
-  const marqueeRef = useRef<HTMLDivElement>(null);
 
   const fetchRecipes = useCallback(async () => {
     setLoading(true);
@@ -132,15 +129,6 @@ export const MenuPreview = () => {
     [meals, activeTab],
   );
 
-  const marqueeNames = useMemo(
-    () =>
-      (meals.length > 0
-        ? meals.map((m) => m.title)
-        : ["Chef-crafted", "Macro-engineered", "Fresh every morning"]
-      ).slice(0, 12),
-    [meals],
-  );
-
   // ── Section entrance (scroll-triggered) ────────────────────────────
   useLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -155,31 +143,19 @@ export const MenuPreview = () => {
         {
           yPercent: 0,
           duration: 1,
-          stagger: 0.12,
           ease: "power4.out",
-          scrollTrigger: { trigger: "[data-menu-header]", start: "top 78%" },
+          scrollTrigger: { trigger: "[data-menu-header]", start: "top 80%" },
         },
       );
       gsap.fromTo(
         "[data-menu-fade]",
-        { autoAlpha: 0, y: 26 },
+        { autoAlpha: 0, y: 24 },
         {
           autoAlpha: 1,
           y: 0,
-          duration: 0.8,
+          duration: 0.75,
           stagger: 0.1,
           ease: "power3.out",
-          scrollTrigger: { trigger: "[data-menu-header]", start: "top 75%" },
-        },
-      );
-      gsap.fromTo(
-        "[data-menu-rule]",
-        { scaleX: 0 },
-        {
-          scaleX: 1,
-          duration: 1.1,
-          ease: "power3.inOut",
-          transformOrigin: "left center",
           scrollTrigger: { trigger: "[data-menu-header]", start: "top 78%" },
         },
       );
@@ -193,21 +169,6 @@ export const MenuPreview = () => {
     };
   }, []);
 
-  // ── Marquee loop (rebuilds when recipe names arrive) ───────────────
-  useLayoutEffect(() => {
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduceMotion || !marqueeRef.current) return;
-    const tween = gsap.to(marqueeRef.current, {
-      xPercent: -50,
-      duration: 36,
-      repeat: -1,
-      ease: "none",
-    });
-    return () => {
-      tween.kill();
-    };
-  }, [marqueeNames]);
-
   // ── Card entrance: replays on every filter change / data load ──────
   useLayoutEffect(() => {
     if (loading) return;
@@ -217,15 +178,15 @@ export const MenuPreview = () => {
     const ctx = gsap.context(() => {
       gsap.fromTo(
         "[data-menu-card]",
-        { autoAlpha: 0, y: 46, scale: 0.96 },
+        { autoAlpha: 0, y: 40, scale: 0.97 },
         {
           autoAlpha: 1,
           y: 0,
           scale: 1,
-          duration: 0.75,
-          stagger: 0.07,
+          duration: 0.7,
+          stagger: 0.06,
           ease: "power3.out",
-          scrollTrigger: { trigger: "[data-menu-track]", start: "top 88%" },
+          scrollTrigger: { trigger: "[data-menu-track]", start: "top 90%" },
         },
       );
       gsap.fromTo(
@@ -236,8 +197,8 @@ export const MenuPreview = () => {
           duration: 0.9,
           stagger: 0.03,
           ease: "power2.out",
-          delay: 0.35,
-          scrollTrigger: { trigger: "[data-menu-track]", start: "top 88%" },
+          delay: 0.3,
+          scrollTrigger: { trigger: "[data-menu-track]", start: "top 90%" },
         },
       );
     }, scope);
@@ -254,16 +215,8 @@ export const MenuPreview = () => {
     <section
       id="menu"
       ref={scope}
-      className="relative overflow-hidden bg-emerald-deep py-24 text-white sm:py-28 lg:py-32"
+      className="relative overflow-hidden bg-emerald-deep py-20 text-white sm:py-24"
     >
-      {/* Texture + glow */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.05]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}
-        aria-hidden
-      />
       <div
         className="pointer-events-none absolute -top-40 left-1/2 h-[420px] w-[720px] -translate-x-1/2"
         style={{
@@ -274,37 +227,22 @@ export const MenuPreview = () => {
       />
 
       <div className="relative mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
-        {/* ── Header ── */}
-        <div data-menu-header className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <div className="mb-5 flex items-center gap-4">
-              <span data-menu-rule className="h-px w-12 shrink-0 bg-gold" aria-hidden />
-              <p className="font-heading text-[0.6875rem] font-semibold uppercase tracking-[0.32em] text-gold-soft sm:text-xs">
-                This week in the kitchen
-              </p>
-            </div>
-            <h2 className="font-heading text-4xl font-semibold leading-[1.06] tracking-tight sm:text-5xl">
-              <span className="block overflow-hidden pb-[0.08em]">
-                <span data-menu-line-inner className="block will-change-transform">
-                  A menu that never
-                </span>
+        {/* ── Header: one headline + filters. Nothing else. ── */}
+        <div
+          data-menu-header
+          className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between"
+        >
+          <h2 className="font-heading text-4xl font-semibold leading-[1.06] tracking-tight sm:text-5xl">
+            <span className="block overflow-hidden pb-[0.08em]">
+              <span data-menu-line-inner className="block will-change-transform">
+                This week&rsquo;s{" "}
+                <em className="not-italic bg-gradient-to-r from-gold-soft to-[#f3e7c3] bg-clip-text text-transparent">
+                  menu.
+                </em>
               </span>
-              <span className="block overflow-hidden pb-[0.08em]">
-                <span data-menu-line-inner className="block will-change-transform">
-                  repeats{" "}
-                  <em className="not-italic bg-gradient-to-r from-gold-soft to-[#f3e7c3] bg-clip-text text-transparent">
-                    itself.
-                  </em>
-                </span>
-              </span>
-            </h2>
-            <p data-menu-fade className="mt-5 max-w-xl text-lg leading-relaxed text-white/60">
-              80+ chef-crafted dishes in weekly rotation — the variety of your
-              favourite restaurants, with the precision of a nutrition lab.
-            </p>
-          </div>
+            </span>
+          </h2>
 
-          {/* Filter pills */}
           <div data-menu-fade className="overflow-x-auto pb-1 hide-scrollbar">
             <div
               role="tablist"
@@ -339,53 +277,32 @@ export const MenuPreview = () => {
           </div>
         </div>
 
-        {/* ── Dish-name marquee ── */}
-        <div
-          data-menu-fade
-          className="mt-12 overflow-hidden border-y border-white/10 py-4 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
-          aria-hidden
-        >
-          <div ref={marqueeRef} className="flex w-max items-center whitespace-nowrap will-change-transform">
-            {[0, 1].map((copy) => (
-              <div key={copy} className="flex items-center">
-                {marqueeNames.map((name) => (
-                  <span
-                    key={`${copy}-${name}`}
-                    className="font-heading flex items-center text-lg font-medium text-white/35"
-                  >
-                    <span className="px-5">{name}</span>
-                    <span className="text-gold/60">✦</span>
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* ── Cards ── */}
         {loading ? (
-          <div className="mt-12 flex snap-x gap-6 overflow-x-auto pb-4 hide-scrollbar">
+          <div className="mt-10 flex snap-x gap-6 overflow-x-auto pb-4 hide-scrollbar">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="w-[min(100%,300px)] shrink-0 snap-start sm:w-[320px]">
                 <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.05] p-2.5">
                   <div className="aspect-[4/5] animate-pulse rounded-2xl bg-white/[0.07]" />
                   <div className="px-2 pb-3 pt-4">
                     <div className="h-5 w-3/4 animate-pulse rounded bg-white/[0.07]" />
-                    <div className="mt-3 h-4 w-full animate-pulse rounded bg-white/[0.07]" />
                   </div>
                 </div>
               </div>
             ))}
           </div>
         ) : visibleMeals.length === 0 ? (
-          <p className="mt-12 text-center text-base text-white/55">
+          <p className="mt-10 text-center text-base text-white/55">
             {meals.length === 0
               ? "No recipes in the menu yet."
               : "No dishes match this filter."}
           </p>
         ) : (
-          <div data-menu-track className="mt-12 flex snap-x gap-6 overflow-x-auto pb-5 hide-scrollbar">
-            {visibleMeals.map((meal, idx) => (
+          <div
+            data-menu-track
+            className="mt-10 flex snap-x gap-6 overflow-x-auto pb-5 hide-scrollbar"
+          >
+            {visibleMeals.map((meal) => (
               <article
                 key={`${activeTab}-${meal.id}`}
                 data-menu-card
@@ -409,9 +326,6 @@ export const MenuPreview = () => {
                         {meal.calories} kcal
                       </span>
                     ) : null}
-                    <span className="absolute right-3 top-3 rounded-full bg-white/12 px-2.5 py-1.5 text-[0.625rem] font-bold uppercase tracking-wider text-white/80 backdrop-blur">
-                      № {String(idx + 1).padStart(2, "0")}
-                    </span>
                     <h3 className="font-heading absolute inset-x-4 bottom-4 text-xl font-semibold leading-snug text-white drop-shadow">
                       {meal.title}
                     </h3>
@@ -425,19 +339,13 @@ export const MenuPreview = () => {
           </div>
         )}
 
-        {/* ── CTA row ── */}
-        <div
-          data-menu-fade
-          className="mt-12 flex flex-col items-center gap-5 sm:flex-row sm:justify-between"
-        >
-          <p className="text-sm text-white/45">
-            The rotation changes every week — this is just this morning&rsquo;s board.
-          </p>
+        {/* ── One clear CTA ── */}
+        <div data-menu-fade className="mt-10 flex justify-center">
           <Link
             href="/menu"
-            className="group inline-flex h-13 items-center gap-3 rounded-full border border-gold/40 px-8 py-3.5 text-base font-semibold text-gold-soft transition-all duration-300 hover:-translate-y-0.5 hover:border-gold hover:bg-gold/10"
+            className="group inline-flex h-14 items-center gap-3 rounded-full bg-gold-soft px-9 text-base font-semibold text-emerald-deep transition-all duration-300 hover:-translate-y-0.5 hover:brightness-105"
           >
-            Explore the full menu
+            See the full menu
             <span
               className="inline-block transition-transform duration-300 group-hover:translate-x-1.5"
               aria-hidden

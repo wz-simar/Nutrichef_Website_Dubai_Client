@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Source masters (optimized copies live in /public/hero)
+/public/new_assets/

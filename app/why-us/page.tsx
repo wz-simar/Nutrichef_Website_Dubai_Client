@@ -32,16 +32,15 @@ export default function WhyUsPage() {
             <br className="hidden sm:block" /> We made it a system.
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-secondary-text">
-            NutriChef exists for people whose calendar is worth more than their
-            kitchen: fine-dining chefs, a clinical nutritionist, and a delivery
-            operation that beats your alarm clock — every single morning.
+            Fine-dining chefs, a clinical nutritionist, and a delivery operation
+            that beats your alarm clock.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/plans"
               className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-7 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover"
             >
-              Design my plan
+              Start my plan
             </Link>
             <Link
               href="/menu"

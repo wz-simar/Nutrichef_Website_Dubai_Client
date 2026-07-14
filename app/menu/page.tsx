@@ -99,8 +99,7 @@ export default function MenuPage() {
               What our chefs are cooking this week
             </h1>
             <p className="text-lg text-secondary-text">
-              80+ dishes, every macro accounted for — this is what lands at your
-              door when you subscribe.
+              80+ dishes, every macro accounted for.
             </p>
           </div>
           <div className="mt-8 md:mt-0">
