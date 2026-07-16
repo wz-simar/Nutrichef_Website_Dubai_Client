@@ -7,6 +7,7 @@ import { useRequireAuth } from "@/lib/useRequireAuth";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { formatMinorUnits, formatMajorUnits } from "@/lib/formatCurrency";
+import { PlanIconBadge } from "@/components/PlanIconBadge";
 import {
   collectRawDurationKeysFromPricing,
   daysForDurationKey,
@@ -37,10 +38,14 @@ const GOAL_EMOJIS: Record<string, string> = {
   custom: "👨‍🍳",
   "customized meal plan": "👨‍🍳",
   "custom macros": "👨‍🍳",
-  special: "🌸",
-  "special care": "🌸",
   pcos: "🌸",
   pcod: "🌸",
+  "pcod / pcos care": "🌸",
+  "pcod pcos": "🌸",
+  thyroid: "🦋",
+  "thyroid care": "🦋",
+  pregnancy: "🤰",
+  "pregnancy nutrition": "🤰",
 };
 
 interface BackendPlan {
@@ -48,7 +53,9 @@ interface BackendPlan {
   title: string;
   goalType?: string;
   dietType?: string;
-  structure: Record<string, unknown>;
+  structure: Record<string, unknown> & {
+    nutrition?: { calories?: number; protein?: number; carbs?: number; fat?: number };
+  };
   pricing?: {
     breakfast?: Record<string, number>;
     lunch?: Record<string, number>;
@@ -62,6 +69,16 @@ interface PlanType {
   desc: string;
   emoji: string;
   style: string;
+  /** Daily calorie target of the plan, when known. */
+  kcal?: number | null;
+}
+
+function planCalories(p: BackendPlan): number | null {
+  const n = p.structure?.nutrition;
+  if (!n) return null;
+  if (n.calories && n.calories > 0) return Math.round(n.calories);
+  const kcal = (n.protein ?? 0) * 4 + (n.carbs ?? 0) * 4 + (n.fat ?? 0) * 9;
+  return kcal > 0 ? Math.round(kcal) : null;
 }
 
 interface Cycle {
@@ -82,7 +99,9 @@ const FALLBACK_PLAN_TYPES: PlanType[] = [
   { id: "gut", title: "Gut Health", desc: "Fibre and ferment-rich food for a happy gut", emoji: "🦠", style: "default" },
   { id: "age", title: "Age Reverse", desc: "Antioxidant-dense menus for longevity", emoji: "⏳", style: "default" },
   { id: "custom", title: "Customized Meal Plan", desc: "Built with our chef around your exact needs", emoji: "👨‍🍳", style: "custom" },
-  { id: "special", title: "Special Care", desc: "PCOD / PCOS · Thyroid · Pregnancy support", emoji: "🌸", style: "default" },
+  { id: "pcod-pcos", title: "PCOD / PCOS Care", desc: "Hormone-balancing meals for PCOD & PCOS", emoji: "🌸", style: "default" },
+  { id: "thyroid", title: "Thyroid Care", desc: "Nutrient-targeted meals that support thyroid function", emoji: "🦋", style: "default" },
+  { id: "pregnancy", title: "Pregnancy Nutrition", desc: "Wholesome, doctor-informed meals for every trimester", emoji: "🤰", style: "default" },
 ];
 
 /** New pricing model: price = per-meal rate × meals/day × days. */
@@ -241,6 +260,7 @@ export default function PlansPage() {
             desc: buildPlanDescription(p.goalType, p.dietType),
             emoji: GOAL_EMOJIS[key] || "🍽️",
             style: key.includes("custom") ? "custom" : "default",
+            kcal: planCalories(p),
           };
         });
         setPlanTypes(mapped);
@@ -488,6 +508,17 @@ export default function PlansPage() {
                             <p className="pr-1 text-[13px] font-medium leading-[1.4] text-secondary-text">
                               {plan.desc}
                             </p>
+                            {plan.kcal ? (
+                              <span
+                                className={`mt-2 inline-block rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                                  isActive
+                                    ? "bg-primary/15 text-primary"
+                                    : "bg-bg-light text-secondary-text"
+                                }`}
+                              >
+                                ~{plan.kcal.toLocaleString()} kcal/day
+                              </span>
+                            ) : null}
                           </div>
                           <div className="text-[42px] leading-none">{plan.emoji}</div>
                         </div>
@@ -651,9 +682,7 @@ export default function PlansPage() {
                       {selectedCycle ? `, ${getCurrentCycle()?.title ?? ""}` : ""}
                     </p>
                   </div>
-                  <div className="relative flex h-[64px] w-[64px] shrink-0 items-center justify-center rounded-[16px] bg-surface font-black shadow-sm">
-                    <span className="text-[36px]">🛍️</span>
-                  </div>
+                  <PlanIconBadge size={64} />
                 </div>
 
                 {/* Promo Code */}

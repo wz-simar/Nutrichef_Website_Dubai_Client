@@ -7,10 +7,6 @@ const OFFICE_WHATSAPP_URL = whatsappLink(
 /** Hyperlink anchors extracted from office nutrichef.pdf */
 export const OFFICE_BLOG_LINKS = [
   {
-    anchor: "See more stories from our community",
-    url: "https://www.nutrichef.ae/community",
-  },
-  {
     anchor: "cooked fresh that same morning",
     url: "https://www.nutrichef.ae/menu",
   },

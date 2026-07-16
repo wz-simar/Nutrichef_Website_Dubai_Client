@@ -17,7 +17,6 @@ const planLinks = [
 
 const companyLinks = [
   { href: "/why-us", label: "Why NutriChef" },
-  { href: "/community", label: "Client Stories" },
   { href: "/faq", label: "FAQ" },
   { href: "/contact-us", label: "Contact & Concierge" },
 ] as const;

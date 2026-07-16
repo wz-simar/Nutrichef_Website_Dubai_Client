@@ -21,10 +21,14 @@ export const GOAL_EMOJIS: Record<string, string> = {
   custom: "👨‍🍳",
   "customized meal plan": "👨‍🍳",
   "custom macros": "👨‍🍳",
-  special: "🌸",
-  "special care": "🌸",
   pcos: "🌸",
   pcod: "🌸",
+  "pcod / pcos care": "🌸",
+  "pcod pcos": "🌸",
+  thyroid: "🦋",
+  "thyroid care": "🦋",
+  pregnancy: "🤰",
+  "pregnancy nutrition": "🤰",
 };
 
 export interface ApiTemplate {

@@ -1,75 +1,34 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { HERO_SLIDES } from "@/lib/heroMedia";
 
 /**
- * Full-screen hero: client photos/videos with per-slide copy.
- * Video slides play through to the end (`ended` event) before advancing;
- * image slides hold for their configured duration. Crossfade + text
- * animations are pure CSS (keyed remount), so the hero renders and rotates
- * even where requestAnimationFrame is throttled.
+ * Full-screen hero: client photography with per-slide copy, always
+ * auto-advancing. Crossfade + text animations are pure CSS (keyed remount),
+ * so the hero renders and rotates even where requestAnimationFrame is
+ * throttled.
  */
 export const HeroSection = () => {
   const router = useRouter();
   const [slide, setSlide] = useState(0);
-  /** Real video durations (s), learned from metadata — drives the dot fill. */
-  const [videoDurs, setVideoDurs] = useState<Record<number, number>>({});
-  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
-  const slideRef = useRef(0);
-  slideRef.current = slide;
 
   const current = HERO_SLIDES[slide];
-  const isVideoSlide = current.media.type === "video";
 
-  const goNext = useCallback(
-    () => setSlide((s) => (s + 1) % HERO_SLIDES.length),
-    []
-  );
-
-  // Image slides: fixed hold. Video slides: the `ended` event advances;
-  // the timer here is only a safety net (duration + buffer) in case the
-  // video stalls and `ended` never fires.
   useEffect(() => {
     if (HERO_SLIDES.length < 2) return;
-    const holdMs = isVideoSlide
-      ? ((videoDurs[slide] ?? 70) + 6) * 1000
-      : current.durationMs;
-    const id = window.setTimeout(goNext, holdMs);
+    const id = window.setTimeout(
+      () => setSlide((s) => (s + 1) % HERO_SLIDES.length),
+      current.durationMs
+    );
     return () => window.clearTimeout(id);
-  }, [slide, isVideoSlide, current.durationMs, videoDurs, goNext]);
-
-  // The active video restarts from the top and plays; the rest pause.
-  useEffect(() => {
-    videoRefs.current.forEach((v, i) => {
-      if (!v) return;
-      if (i === slide) {
-        try {
-          v.currentTime = 0;
-        } catch {
-          /* metadata not ready yet */
-        }
-        void v.play().catch(() => {});
-      } else {
-        v.pause();
-      }
-    });
-  }, [slide]);
+  }, [slide, current.durationMs]);
 
   const go = (dir: 1 | -1) =>
     setSlide((s) => (s + dir + HERO_SLIDES.length) % HERO_SLIDES.length);
-
-  /** Dot progress duration: real video length for videos, hold time for images. */
-  const fillMsFor = (i: number): number => {
-    const s = HERO_SLIDES[i];
-    if (s.media.type === "video") {
-      return videoDurs[i] ? videoDurs[i] * 1000 : 0;
-    }
-    return s.durationMs;
-  };
 
   return (
     <section
@@ -85,57 +44,24 @@ export const HeroSection = () => {
         } as React.CSSProperties;
         return (
           <div
-            key={`${s.media.src}`}
+            key={s.src}
             aria-hidden={!active}
             className="absolute inset-0"
             style={{
               opacity: active ? 1 : 0,
-              // Photos get a slow drift; videos stay steady while they play.
-              transform:
-                active && s.media.type === "image" ? "scale(1.05)" : "scale(1)",
+              transform: active ? "scale(1.05)" : "scale(1)",
               transition: "opacity 1s ease, transform 8s linear",
             }}
           >
-            {s.media.type === "video" ? (
-              <video
-                ref={(el) => {
-                  videoRefs.current[i] = el;
-                }}
-                src={s.media.src}
-                poster={s.media.poster}
-                muted
-                playsInline
-                autoPlay={i === 0}
-                preload={i === 0 ? "auto" : "metadata"}
-                className="hero-media h-full w-full object-cover"
-                style={posStyle}
-                aria-label={s.alt}
-                onLoadedMetadata={(e) => {
-                  const dur = e.currentTarget.duration;
-                  if (Number.isFinite(dur) && dur > 0) {
-                    setVideoDurs((prev) =>
-                      prev[i] ? prev : { ...prev, [i]: dur }
-                    );
-                  }
-                }}
-                onEnded={() => {
-                  if (slideRef.current === i) goNext();
-                }}
-                onError={() => {
-                  if (slideRef.current === i) goNext();
-                }}
-              />
-            ) : (
-              <Image
-                src={s.media.src}
-                alt={s.alt}
-                fill
-                priority={i === 0}
-                sizes="100vw"
-                className="hero-media object-cover"
-                style={posStyle}
-              />
-            )}
+            <Image
+              src={s.src}
+              alt={s.alt}
+              fill
+              priority={i === 0}
+              sizes="100vw"
+              className="hero-media object-cover"
+              style={posStyle}
+            />
           </div>
         );
       })}
@@ -154,25 +80,21 @@ export const HeroSection = () => {
       <div className="absolute inset-x-0 bottom-0 z-10">
         <div className="mx-auto max-w-7xl px-5 pb-24 sm:px-8 sm:pb-28 lg:px-10">
           <div key={slide} className="hero-slide-copy max-w-2xl">
-            <p className="font-heading mb-4 text-[0.6875rem] font-semibold uppercase tracking-[0.3em] text-gold-soft sm:text-xs">
+            <p className="font-heading mb-4 text-[0.6875rem] font-semibold uppercase tracking-[0.3em] text-gold sm:text-xs">
               {current.eyebrow}
             </p>
 
-            {current.headline ? (
-              <h1 className="font-heading text-[2.6rem] font-semibold leading-[1.03] tracking-tight text-white sm:text-6xl lg:text-[4.2rem]">
-                {current.headline[0]}
-                <br />
-                <span className="bg-gradient-to-r from-gold-soft to-[#f3e7c3] bg-clip-text text-transparent">
-                  {current.headline[1]}
-                </span>
-              </h1>
-            ) : null}
+            <h1 className="font-heading text-[2.6rem] font-semibold leading-[1.03] tracking-tight text-white sm:text-6xl lg:text-[4.2rem]">
+              {current.headline[0]}
+              <br />
+              <span className="bg-gradient-to-r from-gold-soft to-[#f3e7c3] bg-clip-text text-transparent">
+                {current.headline[1]}
+              </span>
+            </h1>
 
-            {current.sub ? (
-              <p className="mt-4 max-w-lg text-lg leading-relaxed text-white/85 sm:text-xl">
-                {current.sub}
-              </p>
-            ) : null}
+            <p className="mt-4 max-w-lg text-lg leading-relaxed text-white/85 sm:text-xl">
+              {current.sub}
+            </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-4">
               <button
@@ -206,7 +128,6 @@ export const HeroSection = () => {
           <div className="flex items-center gap-2.5" role="tablist" aria-label="Hero slides">
             {HERO_SLIDES.map((s, i) => {
               const active = i === slide;
-              const fillMs = fillMsFor(i);
               return (
                 <button
                   key={i}
@@ -221,13 +142,9 @@ export const HeroSection = () => {
                 >
                   {active ? (
                     <span
-                      key={`fill-${slide}-${fillMs}`}
+                      key={`fill-${slide}`}
                       className="absolute inset-y-0 left-0 rounded-full bg-white"
-                      style={
-                        fillMs > 0
-                          ? { animation: `hero-dot-fill ${fillMs}ms linear forwards` }
-                          : { width: "30%" }
-                      }
+                      style={{ animation: `hero-dot-fill ${current.durationMs}ms linear forwards` }}
                     />
                   ) : null}
                 </button>

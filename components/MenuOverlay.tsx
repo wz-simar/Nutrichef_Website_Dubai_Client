@@ -11,7 +11,6 @@ const navLinks = [
     { name: "This Week's Menu", href: '/menu', hasChild: false },
     { name: 'Subscribe & Save', href: '/subscribe', hasChild: false },
     { name: 'Why us', href: '/why-us', hasChild: false },
-    { name: 'Client Stories', href: '/community', hasChild: false },
     { name: '🇦🇪 United Arab Emirates', href: '/uae', hasChild: false },
     { name: '🇸🇦 Saudi Arabia', href: '/saudi-arabia', hasChild: false },
     { name: '🇶🇦 Qatar', href: '/qatar', hasChild: false },

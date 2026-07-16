@@ -3,27 +3,30 @@
 import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { caloBlogImage } from "@/lib/calo-images";
 import { Button } from "../Button";
+
+/** Professional plated-meal photography (Unsplash) — Dubai fine-dining style. */
+const dubaiMealPhoto = (id: string) =>
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=80`;
 
 const steps = [
   {
     id: 1,
     title: "Tell us your goal",
     description: "Two minutes. Your goals become a plan with your name on it.",
-    image: caloBlogImage("imaghe-37.webp"),
+    image: dubaiMealPhoto("photo-1547592166-23ac45744acd"),
   },
   {
     id: 2,
     title: "We cook",
     description: "Fresh that morning, checked against your macros.",
-    image: caloBlogImage("imaghe-9-1.webp"),
+    image: dubaiMealPhoto("photo-1577219491135-ce391730fb2c"),
   },
   {
     id: 3,
     title: "You eat",
     description: "At your door before 10 AM. Three minutes to plate.",
-    image: caloBlogImage("imaghe-7.webp"),
+    image: dubaiMealPhoto("photo-1414235077428-338989a2e8c0"),
   },
 ];
 
