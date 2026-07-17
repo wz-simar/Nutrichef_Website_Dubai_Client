@@ -24,6 +24,10 @@ const companyLinks = [
 const resourceLinks = [
   { href: "/healthy-meal-delivery-dubai", label: "Healthy Meal Delivery Dubai" },
   {
+    href: "/best-healthy-meal-subscription-dubai",
+    label: "Best Healthy Meal Subscription Dubai",
+  },
+  {
     href: "/blogs/Top-5-Healthy-Meal-Delivery-Services-in-Dubai",
     label: "Top 5 Meal Delivery Services in Dubai",
   },

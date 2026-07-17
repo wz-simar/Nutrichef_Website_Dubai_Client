@@ -13,6 +13,10 @@ const navLinks = [
   { href: "/why-us", label: "Why us" },
   { href: "/faq", label: "FAQ" },
   { href: "/contact-us", label: "Contact" },
+  {
+    href: "/blogs/Top-5-Healthy-Meal-Delivery-Services-in-Dubai",
+    label: "Compare plans",
+  },
 ] as const;
 
 const LG = "(min-width: 1024px)";
@@ -255,7 +259,7 @@ export const Navbar = () => {
                 className="mt-4 flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover"
                 onClick={() => setOpen(false)}
               >
-                Start my plan
+                See plans
               </Link>
               <button
                 type="button"
@@ -313,7 +317,7 @@ export const Navbar = () => {
               href="/plans"
               className="ml-1 inline-flex h-10 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover"
             >
-              Start my plan
+              See plans
             </Link>
             <div className="ml-2 pl-2">
               <NavbarUserMenu />
