@@ -25,19 +25,24 @@ export function buildPageMetadata({
   path,
   keywords,
   ogImage,
+  absoluteTitle,
 }: {
   title: string;
   description: string;
   path: string;
   keywords?: string[];
   ogImage?: string;
+  /** Use exact title tag text — skips the layout `%s | NutriChef` template. */
+  absoluteTitle?: boolean;
 }): Metadata {
   const canonical = path === "/" ? SITE_URL : `${SITE_URL}${path}`;
   const image = ogImage ?? DEFAULT_OG_IMAGE;
 
-  // Titles that already carry the brand skip the layout's `%s | NutriChef`
-  // template so the brand never doubles; bare titles still get the suffix.
-  const resolvedTitle = title.includes(SITE_NAME) ? { absolute: title } : title;
+  const resolvedTitle = absoluteTitle
+    ? { absolute: title }
+    : title.includes(SITE_NAME)
+      ? { absolute: title }
+      : title;
 
   return {
     title: resolvedTitle,

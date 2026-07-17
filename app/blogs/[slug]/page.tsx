@@ -23,9 +23,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!post) return {};
 
   return buildPageMetadata({
-    title: post.title,
+    title: post.metaTitle ?? post.title,
     description: post.description,
     path: `/blogs/${post.slug}`,
+    absoluteTitle: post.metaTitle != null,
   });
 }
 

@@ -31,7 +31,7 @@ No per-post `page.tsx` needed — `app/blogs/[slug]/page.tsx` renders all regist
 - **H1**: `post.title` only (rendered in `BlogPostHero`) — never duplicate as a block
 - **H2**: major sections (`level: 2`, stable `id` for TOC anchors)
 - **H3**: subsections and FAQ questions (`level: 3`)
-- **Title tag**: `{title}` → becomes `{title} | NutriChef` via `buildPageMetadata`
+- **Title tag**: set `metaTitle` in the blog content file (exact SEO string). On-page **H1** stays in `title`. When `metaTitle` is set, it is used as-is (no extra `| NutriChef` suffix).
 - **Meta description**: 150–160 chars, keyword + NutriChef hook
 - **Internal links**: use `richParagraph` → `/plans`, `/menu`, `/why-us`, `/contact-us`, `/healthy-meal-delivery-dubai`
 

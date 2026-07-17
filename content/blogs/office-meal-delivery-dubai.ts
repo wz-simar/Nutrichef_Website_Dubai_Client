@@ -3,6 +3,7 @@ import { OFFICE_BLOG_LINKS } from "@/content/blogs/office-links";
 
 export const officeMealDeliveryDubai: BlogPost = {
   slug: "Office-Meal-Delivery-Dubai",
+  metaTitle: "Healthy Office Meal Delivery Dubai | Corporate Lunch Plans",
   title:
     "How Dubai offices are saving up to AED 3,000 a month and getting their team back from lunch in 20 minutes flat",
   description:

@@ -39,7 +39,10 @@ export type BlogBlock =
 
 export interface BlogPost {
   slug: string;
+  /** On-page H1 (hero heading). */
   title: string;
+  /** Browser tab / Google title tag. Falls back to `title` when omitted. */
+  metaTitle?: string;
   description: string;
   publishedAt: string;
   updatedAt?: string;
