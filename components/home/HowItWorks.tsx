@@ -5,28 +5,27 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "../Button";
 
-/** Professional plated-meal photography (Unsplash) — Dubai fine-dining style. */
-const dubaiMealPhoto = (id: string) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=80`;
-
 const steps = [
   {
     id: 1,
     title: "Tell us your goal",
     description: "Two minutes. Your goals become a plan with your name on it.",
-    image: dubaiMealPhoto("photo-1547592166-23ac45744acd"),
+    image: "/how-it-works/step-1-meals.png",
+    alt: "NutriChef meal spread with salads, grilled chicken, steak, dessert and smoothie",
   },
   {
     id: 2,
     title: "We cook",
     description: "Fresh that morning, checked against your macros.",
-    image: dubaiMealPhoto("photo-1577219491135-ce391730fb2c"),
+    image: "/how-it-works/step-2-protein-wrap.png",
+    alt: "Fresh protein wrap with grilled chicken, avocado and greens",
   },
   {
     id: 3,
     title: "You eat",
     description: "At your door before 10 AM. Three minutes to plate.",
-    image: dubaiMealPhoto("photo-1414235077428-338989a2e8c0"),
+    image: "/how-it-works/step-3-beverages.png",
+    alt: "Iced coffee beverages and light bites ready to enjoy",
   },
 ];
 
@@ -51,7 +50,7 @@ export const HowItWorks = () => {
                 <div className="relative aspect-[1/1.05] w-full overflow-hidden rounded-[28px] bg-bg-light shadow-sm">
                   <Image
                     src={step.image}
-                    alt={step.title}
+                    alt={step.alt}
                     fill
                     className="object-cover transition-transform duration-500 hover:scale-[1.03]"
                     sizes="(max-width: 768px) 100vw, 33vw"

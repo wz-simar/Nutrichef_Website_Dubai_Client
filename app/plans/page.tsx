@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { formatMinorUnits, formatMajorUnits } from "@/lib/formatCurrency";
 import { PlanIconBadge } from "@/components/PlanIconBadge";
+import { PlanPreviewModal } from "@/components/PlanPreviewModal";
 import {
   collectRawDurationKeysFromPricing,
   daysForDurationKey,
@@ -245,6 +246,7 @@ export default function PlansPage() {
   const [activeSubscription, setActiveSubscription] = useState<ActiveSubscriptionPayload | null>(null);
   const [subscriptionFetched, setSubscriptionFetched] = useState(false);
   const [subscriptionBannerDismissed, setSubscriptionBannerDismissed] = useState(false);
+  const [previewPlanId, setPreviewPlanId] = useState<string | null>(null);
 
   const fetchPlans = useCallback(async () => {
     try {
@@ -468,17 +470,20 @@ export default function PlansPage() {
           </p>
         </div>
 
-        {/* Two Column Layout */}
-        <div className="flex flex-col lg:flex-row gap-[60px] lg:gap-[80px] relative">
+        {/* Plan preference heading sits above the two-column row so the
+            pricing card aligns with the first row of plan cards. */}
+        <h2 className="font-heading mb-6 text-[26px] font-semibold tracking-tight text-foreground">
+          What kind of meals do you prefer?
+        </h2>
+
+        {/* Two Column Layout: left scrolls with the page, right stays sticky */}
+        <div className="relative flex flex-col gap-[60px] lg:flex-row lg:items-start lg:gap-[80px]">
           {/* Left Column */}
-          <div className="flex-1 flex flex-col gap-14">
+          <div className="flex min-w-0 flex-1 flex-col gap-14">
             {/* Section 1: Plan Preferences */}
             <section>
-              <h2 className="font-heading mb-6 text-[26px] font-semibold tracking-tight text-foreground">
-                What kind of meals do you prefer?
-              </h2>
               {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-[18px]">
+                <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <div
                       key={i}
@@ -487,7 +492,7 @@ export default function PlansPage() {
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-[18px]">
+                <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2">
                   {planTypes.map((plan) => {
                     const isActive = selectedPlan === plan.id;
                     return (
@@ -500,7 +505,7 @@ export default function PlansPage() {
                             : "border-border-subtle bg-surface shadow-sm hover:border-foreground/15"
                         }`}
                       >
-                        <div className="flex justify-between items-start mb-6">
+                        <div className="mb-6 flex items-start justify-between">
                           <div className="pr-4">
                             <h3 className="mb-1.5 text-[17px] font-semibold text-foreground">
                               {plan.title}
@@ -522,19 +527,22 @@ export default function PlansPage() {
                           </div>
                           <div className="text-[42px] leading-none">{plan.emoji}</div>
                         </div>
-                        <div className="flex justify-between items-center mt-auto pt-2">
-                          <Link
-                            href={`/meal-plans/${plan.id}`}
-                            onClick={(e) => e.stopPropagation()}
+                        <div className="mt-auto flex items-center justify-between pt-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewPlanId(plan.id);
+                            }}
                             className="flex items-center gap-1 text-[13px] font-semibold text-primary underline-offset-2 hover:underline"
                           >
                             Learn More{" "}
                             <span className="text-[12px] font-medium">&rarr;</span>
-                          </Link>
+                          </button>
                           {isActive ? (
                             <div className="flex items-center gap-1.5 rounded-full bg-primary-hover px-3 py-[7px] text-white shadow-sm">
                               <svg
-                                className="w-3 h-3 ml-0.5"
+                                className="ml-0.5 h-3 w-3"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
@@ -544,7 +552,7 @@ export default function PlansPage() {
                               >
                                 <polyline points="20 6 9 17 4 12"></polyline>
                               </svg>
-                              <span className="text-[11.5px] font-[800] tracking-tight mr-1">
+                              <span className="mr-1 text-[11.5px] font-[800] tracking-tight">
                                 Selected
                               </span>
                             </div>
@@ -619,7 +627,7 @@ export default function PlansPage() {
                   programmes will appear.
                 </p>
               ) : null}
-              <div className="flex flex-col gap-[18px] mb-[24px]">
+              <div className="mb-[24px] flex flex-col gap-[18px]">
                 {cycles.map((cycle) => {
                   const isActive = selectedCycle === cycle.id;
                   return (
@@ -633,7 +641,7 @@ export default function PlansPage() {
                       }`}
                     >
                       <div className="flex flex-col">
-                        <div className="flex items-center gap-[12px] mb-1.5">
+                        <div className="mb-1.5 flex items-center gap-[12px]">
                           <span className="text-[15px] font-semibold text-foreground">
                             {cycle.title}
                           </span>
@@ -663,121 +671,126 @@ export default function PlansPage() {
                   );
                 })}
               </div>
-
-             
             </section>
           </div>
 
-          {/* Right Column (Sticky Sidebar) */}
-          <div className="w-full lg:w-[360px] shrink-0">
-            <div className="sticky top-28 w-full lg:top-32">
-              <div className="mb-6 rounded-[32px] border border-border-subtle bg-bg-light p-7 shadow-[0px_4px_24px_rgba(27,48,34,0.06)]">
-                <div className="mb-8 flex items-start justify-between">
-                  <div className="flex-1 pr-[18px]">
-                    <h3 className="font-heading mb-[14px] text-[20px] font-semibold tracking-tight text-foreground">
-                      Your package, your way
-                    </h3>
-                    <p className="text-[13.5px] font-semibold leading-[1.6] text-secondary-text">
-                      {getSelectedPlanTitle()}, {mealsPerDay} meals/day
-                      {selectedCycle ? `, ${getCurrentCycle()?.title ?? ""}` : ""}
-                    </p>
-                  </div>
-                  <PlanIconBadge size={64} />
+          {/* Right Column — sticky so pricing stays visible while browsing plans */}
+          <aside className="w-full shrink-0 self-start lg:sticky lg:top-32 lg:w-[360px]">
+            <div className="rounded-[32px] border border-border-subtle bg-bg-light p-7 shadow-[0px_4px_24px_rgba(27,48,34,0.06)]">
+              <div className="mb-8 flex items-start justify-between">
+                <div className="flex-1 pr-[18px]">
+                  <h3 className="font-heading mb-[14px] text-[20px] font-semibold tracking-tight text-foreground">
+                    Your package, your way
+                  </h3>
+                  <p className="text-[13.5px] font-semibold leading-[1.6] text-secondary-text">
+                    {getSelectedPlanTitle()}, {mealsPerDay} meals/day
+                    {selectedCycle ? `, ${getCurrentCycle()?.title ?? ""}` : ""}
+                  </p>
                 </div>
+                <PlanIconBadge size={64} />
+              </div>
 
-                {/* Promo Code */}
-                <div className="flex gap-[10px] mb-8">
-                  <div className="flex-1 relative">
-                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                      <svg
-                        className="h-[18px] w-[18px] rotate-90 text-secondary-text"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <line x1="4" y1="9" x2="20" y2="9"></line>
-                        <line x1="4" y1="15" x2="20" y2="15"></line>
-                        <line x1="10" y1="3" x2="8" y2="21"></line>
-                        <line x1="16" y1="3" x2="14" y2="21"></line>
-                      </svg>
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Add promotion code"
-                      className="w-full rounded-[14px] border border-border-subtle bg-surface py-[15px] pl-[38px] pr-4 text-[13px] font-semibold text-foreground placeholder:text-secondary-text/70 transition-shadow focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+              {/* Promo Code */}
+              <div className="mb-8 flex gap-[10px]">
+                <div className="relative flex-1">
+                  <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
+                    <svg
+                      className="h-[18px] w-[18px] rotate-90 text-secondary-text"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="4" y1="9" x2="20" y2="9"></line>
+                      <line x1="4" y1="15" x2="20" y2="15"></line>
+                      <line x1="10" y1="3" x2="8" y2="21"></line>
+                      <line x1="16" y1="3" x2="14" y2="21"></line>
+                    </svg>
                   </div>
-                  <button
-                    type="button"
-                    className="rounded-[14px] bg-bg-light px-6 py-[15px] text-[13px] font-semibold tracking-tight text-secondary-text transition-colors hover:bg-foreground/10"
-                  >
-                    Apply
-                  </button>
+                  <input
+                    type="text"
+                    placeholder="Add promotion code"
+                    className="w-full rounded-[14px] border border-border-subtle bg-surface py-[15px] pl-[38px] pr-4 text-[13px] font-semibold text-foreground placeholder:text-secondary-text/70 transition-shadow focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
                 </div>
-
-                {/* Rate note */}
-                <div className="mb-10 flex items-center gap-3 rounded-[14px] border border-dashed border-border-subtle bg-surface p-4">
-                  <span className="text-[18px]" aria-hidden>
-                    👨‍🍳
-                  </span>
-                  <span className="text-[12px] font-semibold leading-[1.5] text-secondary-text">
-                    Every programme includes free morning delivery and
-                    nutritionist sign-off.
-                  </span>
-                </div>
-
-                {/* Payment Summary */}
-                <div className="flex flex-col gap-[14px] mb-[28px]">
-                  <h4 className="mb-1 text-[14px] font-semibold tracking-tight text-foreground">
-                    Payment summary
-                  </h4>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[13px] font-semibold tracking-tight text-secondary-text">
-                      Plan price
-                    </span>
-                    <span className="text-[13px] font-semibold text-foreground">
-                      {getCurrentCycle()
-                        ? formatMinorUnits(getCurrentCycle()!.amount, currency)
-                        : "--"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between border-b border-border-subtle pb-[18px]">
-                    <span className="text-[13px] font-semibold tracking-tight text-secondary-text">
-                      Delivery fee
-                    </span>
-                    <span className="text-[13px] font-semibold text-foreground">
-                      {formatMinorUnits(0, currency)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="font-heading text-[16px] font-semibold tracking-tight text-foreground">
-                      Total
-                    </span>
-                    <span className="font-heading text-[16px] font-semibold tracking-tight text-foreground">
-                      {getCurrentCycle()
-                        ? formatMinorUnits(getCurrentCycle()!.amount, currency)
-                        : "--"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Checkout Btn */}
                 <button
                   type="button"
-                  onClick={handleCheckout}
-                  disabled={checkoutLoading || !selectedCycle}
-                  className="w-full rounded-full bg-primary py-[16px] text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:bg-primary/60"
+                  className="rounded-[14px] bg-bg-light px-6 py-[15px] text-[13px] font-semibold tracking-tight text-secondary-text transition-colors hover:bg-foreground/10"
                 >
-                  {checkoutLoading ? "Processing..." : "Continue"}
+                  Apply
                 </button>
               </div>
+
+              {/* Rate note */}
+              <div className="mb-10 flex items-center gap-3 rounded-[14px] border border-dashed border-border-subtle bg-surface p-4">
+                <span className="text-[18px]" aria-hidden>
+                  👨‍🍳
+                </span>
+                <span className="text-[12px] font-semibold leading-[1.5] text-secondary-text">
+                  Every programme includes free morning delivery and
+                  nutritionist sign-off.
+                </span>
+              </div>
+
+              {/* Payment Summary */}
+              <div className="mb-[28px] flex flex-col gap-[14px]">
+                <h4 className="mb-1 text-[14px] font-semibold tracking-tight text-foreground">
+                  Payment summary
+                </h4>
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] font-semibold tracking-tight text-secondary-text">
+                    Plan price
+                  </span>
+                  <span className="text-[13px] font-semibold text-foreground">
+                    {getCurrentCycle()
+                      ? formatMinorUnits(getCurrentCycle()!.amount, currency)
+                      : "--"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between border-b border-border-subtle pb-[18px]">
+                  <span className="text-[13px] font-semibold tracking-tight text-secondary-text">
+                    Delivery fee
+                  </span>
+                  <span className="text-[13px] font-semibold text-foreground">
+                    {formatMinorUnits(0, currency)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between pt-2">
+                  <span className="font-heading text-[16px] font-semibold tracking-tight text-foreground">
+                    Total
+                  </span>
+                  <span className="font-heading text-[16px] font-semibold tracking-tight text-foreground">
+                    {getCurrentCycle()
+                      ? formatMinorUnits(getCurrentCycle()!.amount, currency)
+                      : "--"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Checkout Btn */}
+              <button
+                type="button"
+                onClick={handleCheckout}
+                disabled={checkoutLoading || !selectedCycle}
+                className="w-full rounded-full bg-primary py-[16px] text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:bg-primary/60"
+              >
+                {checkoutLoading ? "Processing..." : "Continue"}
+              </button>
             </div>
-          </div>
+          </aside>
         </div>
       </div>
+
+      <PlanPreviewModal
+        open={previewPlanId != null}
+        planId={previewPlanId}
+        planTitle={planTypes.find((p) => p.id === previewPlanId)?.title}
+        planEmoji={planTypes.find((p) => p.id === previewPlanId)?.emoji}
+        onClose={() => setPreviewPlanId(null)}
+        onSelectPlan={(id) => setSelectedPlan(id)}
+      />
     </div>
   );
 }
