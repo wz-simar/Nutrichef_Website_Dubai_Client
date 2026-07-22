@@ -9,6 +9,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { formatMinorUnits, formatMajorUnits } from "@/lib/formatCurrency";
 import { PlanIconBadge } from "@/components/PlanIconBadge";
 import { PlanPreviewModal } from "@/components/PlanPreviewModal";
+import { TRIAL_PLAN, resolveTrialTemplateId } from "@/lib/trialPlan";
 import {
   collectRawDurationKeysFromPricing,
   daysForDurationKey,
@@ -243,6 +244,7 @@ export default function PlansPage() {
   const [unsupportedDurationTiers, setUnsupportedDurationTiers] = useState(false);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [trialCheckoutLoading, setTrialCheckoutLoading] = useState(false);
   const [activeSubscription, setActiveSubscription] = useState<ActiveSubscriptionPayload | null>(null);
   const [subscriptionFetched, setSubscriptionFetched] = useState(false);
   const [subscriptionBannerDismissed, setSubscriptionBannerDismissed] = useState(false);
@@ -369,7 +371,7 @@ export default function PlansPage() {
           productName: `${getSelectedPlanTitle()} — ${durationLabel} · ${mealsPerDay} meals/day`,
           successUrl: `${window.location.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
           cancelUrl: `${window.location.origin}/payment/cancel`,
-          /** Ask Stripe to always attach a Customer so /payment/success can resolve stripeCustomerId. */
+          planType: "standard",
           customer_creation: "always",
         },
         { noAuth: true }
@@ -383,6 +385,46 @@ export default function PlansPage() {
       alert(message);
     } finally {
       setCheckoutLoading(false);
+    }
+  };
+
+  const handleTrialCheckout = async () => {
+    if (!loggedIn) {
+      router.push("/auth/login?redirect=/plans#trial");
+      return;
+    }
+
+    const templateId = resolveTrialTemplateId(backendPlans, selectedPlan);
+    if (!templateId) {
+      alert("Trial checkout is not available yet. Please pick a programme above or try again shortly.");
+      return;
+    }
+
+    setTrialCheckoutLoading(true);
+    try {
+      const res = await api.post<{ url: string; orderId: string }>(
+        "/checkout/session",
+        {
+          templateId,
+          amount: TRIAL_PLAN.amountMinor,
+          currency: TRIAL_PLAN.currency,
+          productName: TRIAL_PLAN.productName,
+          successUrl: `${window.location.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${window.location.origin}/payment/cancel`,
+          planType: "trial",
+          customer_creation: "always",
+        },
+        { noAuth: true }
+      );
+
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Trial checkout failed";
+      alert(message);
+    } finally {
+      setTrialCheckoutLoading(false);
     }
   };
 
@@ -458,7 +500,7 @@ export default function PlansPage() {
         ) : null}
 
         {/* Header */}
-        <div className="mb-14">
+        <div className="mb-10">
           <h1 className="font-heading text-[34px] font-semibold leading-[1.05] tracking-tight text-foreground md:text-[44px]">
             Built Around You.
             <br />
@@ -469,6 +511,82 @@ export default function PlansPage() {
             nutritionist handle everything after checkout.
           </p>
         </div>
+
+        {/* Taste Trial — fixed AED 99 Stripe checkout */}
+        <section
+          id="trial"
+          className="relative mb-14 overflow-hidden rounded-[28px] border border-primary/25 bg-[linear-gradient(135deg,#12291c_0%,#1c6b45_48%,#145234_100%)] p-6 text-white shadow-[0_20px_50px_rgba(18,41,28,0.22)] sm:p-8"
+        >
+          <div
+            className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(184,145,46,0.35),transparent_70%)]"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute -bottom-24 left-1/3 h-48 w-48 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.08),transparent_70%)]"
+            aria-hidden
+          />
+
+          <div className="relative flex flex-col gap-8 lg:flex-row lg:items-stretch lg:justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="mb-4 flex flex-wrap items-center gap-2.5">
+                <span className="rounded-full bg-gold/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-gold-soft">
+                  {TRIAL_PLAN.badge}
+                </span>
+                <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white/90">
+                  One-day taste
+                </span>
+              </div>
+
+              <h2 className="font-heading text-[28px] font-semibold leading-tight tracking-tight sm:text-[34px]">
+                {TRIAL_PLAN.title}
+              </h2>
+              <p className="mt-2 max-w-xl text-[15px] font-medium leading-relaxed text-white/80">
+                {TRIAL_PLAN.tagline} Buy one trial for{" "}
+                <span className="font-semibold text-gold-soft">AED 99</span> — then upgrade to a full
+                programme whenever you&apos;re ready.
+              </p>
+
+              <ul className="mt-6 grid gap-3 sm:grid-cols-3">
+                {TRIAL_PLAN.includes.map((item) => (
+                  <li
+                    key={item.label}
+                    className="rounded-[16px] border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-[2px]"
+                  >
+                    <p className="text-[14px] font-semibold text-white">{item.label}</p>
+                    <p className="mt-1 text-[12px] font-medium leading-snug text-white/70">
+                      {item.detail}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="flex w-full shrink-0 flex-col justify-between rounded-[22px] border border-white/15 bg-white/95 p-5 text-foreground shadow-lg sm:max-w-[280px] lg:w-[280px]">
+              <div>
+                <p className="text-[12px] font-bold uppercase tracking-wide text-secondary-text">
+                  Trial price
+                </p>
+                <p className="font-heading mt-1 text-[40px] font-semibold leading-none tracking-tight text-foreground">
+                  AED 99
+                </p>
+                <p className="mt-2 text-[13px] font-medium text-secondary-text">
+                  2 meals + 1 detox + 1 snack
+                </p>
+                <p className="mt-3 text-[12px] font-semibold text-primary">
+                  Secure checkout with Stripe · Free delivery
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void handleTrialCheckout()}
+                disabled={trialCheckoutLoading || checkoutLoading}
+                className="mt-6 w-full rounded-full bg-primary py-[15px] text-[15px] font-semibold text-white shadow-sm transition hover:bg-primary-hover disabled:bg-primary/60"
+              >
+                {trialCheckoutLoading ? "Opening Stripe…" : "Buy trial — AED 99 →"}
+              </button>
+            </div>
+          </div>
+        </section>
 
         {/* Plan preference heading sits above the two-column row so the
             pricing card aligns with the first row of plan cards. */}
