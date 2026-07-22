@@ -35,13 +35,14 @@ export const HERO_SLIDES: HeroSlide[] = [
     durationMs: 6500,
   },
   {
-    src: "/hero/radhey.png",
-    alt: "Celebrity Chef Radhey plating NutriChef dishes in Dubai",
+    src: "/hero/radheynew.png",
+    alt: "Celebrity Chef Radhey with a spread of NutriChef gourmet dishes",
     eyebrow: "Our celebrity chef",
     headline: ["Crafted by", "Chef Radhey."],
     sub: "Fine-dining plates, engineered for your goals.",
-    objectPosition: "center 30%",
-    objectPositionMobile: "68% center",
+    // Chef + plates sit on the right; keep them framed, leave left for copy.
+    objectPosition: "72% center",
+    objectPositionMobile: "78% center",
     durationMs: 6500,
   },
   {
