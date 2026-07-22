@@ -158,12 +158,14 @@ function PaymentSuccessContent() {
 
       setLoadingStep("activate");
       try {
+        const isTrial = verified.metadata?.planType === "trial";
+        const subscriptionType = isTrial ? "one-time" : "recurring";
         if (stripeCustomerId) {
           await api.post("/payment/subscription", {
             templateId,
             amount,
             currency,
-            type: "recurring",
+            type: subscriptionType,
             stripeCustomerId,
           });
         } else {
@@ -171,7 +173,7 @@ function PaymentSuccessContent() {
             templateId,
             amount,
             currency,
-            type: "recurring",
+            type: subscriptionType,
             checkoutSessionId: verified.id,
             orderId: orderIdFromSession,
           });

@@ -280,6 +280,12 @@ export function PricingSection() {
                     →
                   </span>
                 </Link>
+                <Link
+                  href="/plans#trial"
+                  className="mt-3 inline-flex w-full items-center justify-center rounded-full border border-white/25 bg-white/5 px-6 py-3 text-sm font-semibold text-gold-soft transition hover:bg-white/10"
+                >
+                  Or try Taste Trial — AED 99
+                </Link>
                 <p className="mt-4 text-center text-xs text-white/45">
                   Pause anytime. No lock-in.
                 </p>
