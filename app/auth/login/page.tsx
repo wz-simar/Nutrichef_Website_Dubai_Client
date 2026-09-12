@@ -129,7 +129,8 @@ function LoginContent() {
       </form>
 
       <p className="mt-8 text-center text-sm font-medium text-secondary-text">
-        We&apos;ll send you a verification code via WhatsApp
+        We&apos;ll send a verification code on WhatsApp from WellnessZ. If it
+        doesn&apos;t appear, check Message requests.
       </p>
     </AuthPageShell>
   );
