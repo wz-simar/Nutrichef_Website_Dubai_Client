@@ -56,6 +56,10 @@ const resourceLinks = [
     href: "/franchise-opportunity-saudi-arabia",
     label: "Franchise Opportunity Saudi Arabia",
   },
+  {
+    href: "/diabetic-meal-plans-dubai",
+    label: "Diabetic Meal Plans Dubai",
+  },
 ] as const;
 
 export const Footer = () => {
