@@ -9,6 +9,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { formatMinorUnits, formatMajorUnits } from "@/lib/formatCurrency";
 import { PlanIconBadge } from "@/components/PlanIconBadge";
 import { PlanPreviewModal } from "@/components/PlanPreviewModal";
+import { iconForTemplate } from "@/lib/mealPlanTemplateDisplay";
 import { TRIAL_PLAN, resolveTrialTemplateId } from "@/lib/trialPlan";
 import {
   collectRawDurationKeysFromPricing,
@@ -18,37 +19,6 @@ import {
   planDurationShortTitle,
   supportedDurationKeysPresent,
 } from "@/lib/mealPlanDurationTiers";
-
-const GOAL_EMOJIS: Record<string, string> = {
-  "fat loss": "🔥",
-  fat_loss: "🔥",
-  lose_weight: "🔥",
-  "muscle gain": "💪",
-  muscle_gain: "💪",
-  gain_muscle: "💪",
-  "balanced diet": "🥗",
-  balanced: "🥗",
-  maintain: "🥗",
-  diabetic: "❤️",
-  "diabetic friendly": "❤️",
-  detox: "🌿",
-  "body detox": "🌿",
-  gut: "🦠",
-  "gut health": "🦠",
-  "age reverse": "⏳",
-  age_reverse: "⏳",
-  custom: "👨‍🍳",
-  "customized meal plan": "👨‍🍳",
-  "custom macros": "👨‍🍳",
-  pcos: "🌸",
-  pcod: "🌸",
-  "pcod / pcos care": "🌸",
-  "pcod pcos": "🌸",
-  thyroid: "🦋",
-  "thyroid care": "🦋",
-  pregnancy: "🤰",
-  "pregnancy nutrition": "🤰",
-};
 
 interface BackendPlan {
   _id: string;
@@ -104,6 +74,10 @@ const FALLBACK_PLAN_TYPES: PlanType[] = [
   { id: "pcod-pcos", title: "PCOD / PCOS Care", desc: "Hormone-balancing meals for PCOD & PCOS", emoji: "🌸", style: "default" },
   { id: "thyroid", title: "Thyroid Care", desc: "Nutrient-targeted meals that support thyroid function", emoji: "🦋", style: "default" },
   { id: "pregnancy", title: "Pregnancy Nutrition", desc: "Wholesome, doctor-informed meals for every trimester", emoji: "🤰", style: "default" },
+  { id: "anti-inflammatory", title: "Anti-Inflammatory", desc: "Meals that calm chronic inflammation", emoji: "🫒", style: "default" },
+  { id: "endometriosis", title: "Endometriosis", desc: "Anti-inflammatory support for endometriosis", emoji: "💗", style: "default" },
+  { id: "pcos-hormonal", title: "PCOS, Hormonal Balancing", desc: "Hormone-balancing meals for PCOS", emoji: "🌸", style: "default" },
+  { id: "glp1", title: "GLP-1 Support", desc: "High-protein plates for GLP-1 support", emoji: "⚖️", style: "default" },
 ];
 
 /** New pricing model: price = per-meal rate × meals/day × days. */
@@ -262,7 +236,7 @@ export default function PlansPage() {
             id: p._id,
             title: p.title,
             desc: buildPlanDescription(p.goalType, p.dietType),
-            emoji: GOAL_EMOJIS[key] || "🍽️",
+            emoji: iconForTemplate(p),
             style: key.includes("custom") ? "custom" : "default",
             kcal: planCalories(p),
           };

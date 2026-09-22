@@ -29,6 +29,16 @@ export const GOAL_EMOJIS: Record<string, string> = {
   "thyroid care": "🦋",
   pregnancy: "🤰",
   "pregnancy nutrition": "🤰",
+  "anti inflammatory": "🫒",
+  "anti-inflammatory": "🫒",
+  anti_inflammatory: "🫒",
+  endometriosis: "💗",
+  "hormonal balancing": "🌸",
+  "pcos hormonal balancing": "🌸",
+  hormonal_balance: "🌸",
+  glp1: "⚖️",
+  "glp-1": "⚖️",
+  "glp-1 support": "⚖️",
 };
 
 export interface ApiTemplate {

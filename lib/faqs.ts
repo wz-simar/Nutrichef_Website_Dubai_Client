@@ -28,7 +28,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Can NutriChef build a plan around my exact macros and goals?",
     answer:
-      "Yes — that's the core of what we do. Choose from nine programmes — Fat Loss, Muscle Gain, Balanced Diet, Diabetic Friendly, Body Detox, Gut Health, Age Reverse, a fully Customized Meal Plan, or our Special Care plan for PCOD/PCOS, thyroid, and pregnancy — and our Head Nutritionist calibrates every meal to your body and goals.",
+      "Yes — that's the core of what we do. Choose from programmes including Fat Loss, Muscle Gain, Balanced Diet, Diabetic Friendly, Gut Health, Age Reverse, Customized, Special Care (PCOD/PCOS, thyroid, pregnancy), plus Anti-Inflammatory, Endometriosis, PCOS Hormonal Balancing, and GLP-1 Support — and our Head Nutritionist calibrates every meal to your body and goals.",
   },
   {
     question: "Are the meals actually restaurant quality?",
