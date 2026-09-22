@@ -57,7 +57,7 @@ export function dialCodeForApi(dialCode: string): string {
 export function nationalPhoneForApi(phone: string, countryCodeDigits: string): string {
   let national = String(phone ?? "").replace(/\D/g, "");
   const cc = String(countryCodeDigits ?? "").replace(/\D/g, "");
-  if (cc && national.startsWith(cc) && national.length - cc.length >= 6) {
+  if (cc && national.startsWith(cc) && national.length > 10 && national.length - cc.length >= 6) {
     national = national.slice(cc.length);
   }
   return national.replace(/^0+/, "");
