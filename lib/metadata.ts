@@ -63,8 +63,8 @@ export function buildPageMetadata({
       images: [
         {
           url: image,
-          width: 1200,
-          height: 630,
+          width: 1024,
+          height: 1024,
           alt: `${SITE_NAME} — private-chef meal plans delivered across the UAE and GCC`,
         },
       ],
@@ -103,8 +103,8 @@ export const defaultSiteMetadata: Metadata = {
     images: [
       {
         url: DEFAULT_OG_IMAGE,
-        width: 1200,
-        height: 630,
+        width: 1024,
+        height: 1024,
         alt: `${SITE_NAME} — private-chef meal plans delivered across the UAE and GCC`,
       },
     ],
