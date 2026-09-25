@@ -30,6 +30,7 @@ const staticRoutes = [
   { path: "/franchise-opportunity-uae", priority: 0.85, changeFrequency: "monthly" as const },
   { path: "/franchise-opportunity-saudi-arabia", priority: 0.85, changeFrequency: "monthly" as const },
   { path: "/diabetic-meal-plans-dubai", priority: 0.9, changeFrequency: "weekly" as const },
+  { path: "/kids-meal-plan-dubai", priority: 0.9, changeFrequency: "weekly" as const },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
