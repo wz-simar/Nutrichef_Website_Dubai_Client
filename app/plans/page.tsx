@@ -346,9 +346,9 @@ export default function PlansPage() {
           successUrl: `${window.location.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
           cancelUrl: `${window.location.origin}/payment/cancel`,
           planType: "standard",
+          durationDays: isPlanDurationDayKey(cycle.id) ? Number(cycle.id) : undefined,
           customer_creation: "always",
-        },
-        { noAuth: true }
+        }
       );
 
       if (res.data?.url) {
@@ -386,9 +386,9 @@ export default function PlansPage() {
           successUrl: `${window.location.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
           cancelUrl: `${window.location.origin}/payment/cancel`,
           planType: "trial",
+          durationDays: 1,
           customer_creation: "always",
-        },
-        { noAuth: true }
+        }
       );
 
       if (res.data?.url) {
