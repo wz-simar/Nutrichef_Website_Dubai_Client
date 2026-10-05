@@ -1,15 +1,21 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { guardAgainstRafStall } from "@/lib/gsapStallGuard";
+import { scheduleIdle } from "@/lib/scheduleIdle";
 import { MENU_FILTERS } from "@/components/menu/FilterBar";
 import { api } from "@/lib/api";
 import type { PlanFilterId } from "@/lib/planFromMacros";
 import { derivePlanFilterIdFromMacros } from "@/lib/planFromMacros";
+
+async function loadGsap() {
+  const gsap = (await import("gsap")).default;
+  const { ScrollTrigger } = await import("gsap/ScrollTrigger");
+  const { guardAgainstRafStall } = await import("@/lib/gsapStallGuard");
+  gsap.registerPlugin(ScrollTrigger);
+  return { gsap, guardAgainstRafStall };
+}
 
 const FALLBACK_IMAGE =
   "https://cdn.calo.app/food/46cfb754-32c1-4f59-93fa-026430ae9918/square@3x.jpg";
@@ -120,94 +126,112 @@ export const MenuPreview = () => {
     }
   }, []);
 
-  useEffect(() => {
-    void fetchRecipes();
-  }, [fetchRecipes]);
+  useEffect(() => scheduleIdle(() => void fetchRecipes()), [fetchRecipes]);
 
   const visibleMeals = useMemo(
     () => meals.filter((m) => mealMatchesTab(m, activeTab)),
     [meals, activeTab],
   );
 
-  // ── Section entrance (scroll-triggered) ────────────────────────────
-  useLayoutEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Entrance motion loads after the hero image. Scroll-triggered, so the
+  // section still reads correctly if the animation bundle is late.
+  useEffect(() => {
+    let cancelled = false;
+    let clearGuard = () => {};
+    let revert = () => {};
 
-    const ctx = gsap.context(() => {
-      if (reduceMotion) return;
-
-      gsap.fromTo(
-        "[data-menu-line-inner]",
-        { yPercent: 110 },
-        {
-          yPercent: 0,
-          duration: 1,
-          ease: "power4.out",
-          scrollTrigger: { trigger: "[data-menu-header]", start: "top 80%" },
-        },
-      );
-      gsap.fromTo(
-        "[data-menu-fade]",
-        { autoAlpha: 0, y: 24 },
-        {
-          autoAlpha: 1,
-          y: 0,
-          duration: 0.75,
-          stagger: 0.1,
-          ease: "power3.out",
-          scrollTrigger: { trigger: "[data-menu-header]", start: "top 78%" },
-        },
-      );
-    }, scope);
-
-    const clearGuard = guardAgainstRafStall(ctx);
+    const stop = scheduleIdle(() => {
+      void (async () => {
+        const { gsap, guardAgainstRafStall } = await loadGsap();
+        if (cancelled) return;
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const ctx = gsap.context(() => {
+          if (reduceMotion) return;
+          gsap.fromTo(
+            "[data-menu-line-inner]",
+            { yPercent: 110 },
+            {
+              yPercent: 0,
+              duration: 1,
+              ease: "power4.out",
+              scrollTrigger: { trigger: "[data-menu-header]", start: "top 80%" },
+            },
+          );
+          gsap.fromTo(
+            "[data-menu-fade]",
+            { autoAlpha: 0, y: 24 },
+            {
+              autoAlpha: 1,
+              y: 0,
+              duration: 0.75,
+              stagger: 0.1,
+              ease: "power3.out",
+              scrollTrigger: { trigger: "[data-menu-header]", start: "top 78%" },
+            },
+          );
+        }, scope);
+        revert = () => ctx.revert();
+        clearGuard = guardAgainstRafStall(ctx);
+      })();
+    }, 2000);
 
     return () => {
+      cancelled = true;
+      stop();
       clearGuard();
-      ctx.revert();
+      revert();
     };
   }, []);
 
-  // ── Card entrance: replays on every filter change / data load ──────
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (loading) return;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduceMotion) return;
+    let cancelled = false;
+    let clearGuard = () => {};
+    let revert = () => {};
 
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        "[data-menu-card]",
-        { autoAlpha: 0, y: 40, scale: 0.97 },
-        {
-          autoAlpha: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.7,
-          stagger: 0.06,
-          ease: "power3.out",
-          scrollTrigger: { trigger: "[data-menu-track]", start: "top 90%" },
-        },
-      );
-      gsap.fromTo(
-        "[data-macro-seg]",
-        { scaleX: 0 },
-        {
-          scaleX: 1,
-          duration: 0.9,
-          stagger: 0.03,
-          ease: "power2.out",
-          delay: 0.3,
-          scrollTrigger: { trigger: "[data-menu-track]", start: "top 90%" },
-        },
-      );
-    }, scope);
-
-    const clearGuard = guardAgainstRafStall(ctx);
+    const stop = scheduleIdle(() => {
+      void (async () => {
+        const { gsap, guardAgainstRafStall } = await loadGsap();
+        if (cancelled) return;
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduceMotion) return;
+        const ctx = gsap.context(() => {
+          gsap.fromTo(
+            "[data-menu-card]",
+            { autoAlpha: 0, y: 40, scale: 0.97 },
+            {
+              autoAlpha: 1,
+              y: 0,
+              scale: 1,
+              duration: 0.7,
+              stagger: 0.06,
+              ease: "power3.out",
+              scrollTrigger: { trigger: "[data-menu-track]", start: "top 90%" },
+            },
+          );
+          gsap.fromTo(
+            "[data-macro-seg]",
+            { scaleX: 0 },
+            {
+              scaleX: 1,
+              duration: 0.9,
+              stagger: 0.03,
+              ease: "power2.out",
+              delay: 0.3,
+              scrollTrigger: { trigger: "[data-menu-track]", start: "top 90%" },
+            },
+          );
+        }, scope);
+        revert = () => ctx.revert();
+        clearGuard = guardAgainstRafStall(ctx);
+      })();
+    }, 2000);
 
     return () => {
+      cancelled = true;
+      stop();
       clearGuard();
-      ctx.revert();
+      revert();
     };
   }, [loading, visibleMeals]);
 
@@ -324,6 +348,7 @@ export const MenuPreview = () => {
                       fill
                       className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.07]"
                       sizes="320px"
+                      quality={60}
                     />
                     <div
                       className="absolute inset-0 bg-gradient-to-t from-emerald-deep/85 via-transparent to-transparent"

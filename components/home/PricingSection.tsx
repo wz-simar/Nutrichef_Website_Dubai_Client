@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { api } from "@/lib/api";
+import { fetchPublicTemplates } from "@/lib/publicTemplates";
 import { useTenant } from "@/contexts/TenantContext";
 import { formatMajorUnits } from "@/lib/formatCurrency";
 import { GOAL_EMOJIS } from "@/lib/mealPlanTemplateDisplay";
@@ -12,6 +12,7 @@ import {
   supportedDurationKeysPresent,
   type PlanDurationDayKey,
 } from "@/lib/mealPlanDurationTiers";
+import { scheduleIdle } from "@/lib/scheduleIdle";
 
 /**
  * Public price checker on the home page: pick a plan, meals per day, and
@@ -76,11 +77,7 @@ export function PricingSection() {
 
   const fetchTemplates = useCallback(async () => {
     try {
-      const res = await api.get<{ templates: ApiTemplate[] }>(
-        "/menu/list?type=templates",
-        { noAuth: true }
-      );
-      const list = res.data?.templates ?? [];
+      const list = await fetchPublicTemplates<ApiTemplate>();
       setTemplates(list);
       if (list.length > 0) setPlanId(list[0]._id);
     } catch {
@@ -90,9 +87,7 @@ export function PricingSection() {
     }
   }, []);
 
-  useEffect(() => {
-    void fetchTemplates();
-  }, [fetchTemplates]);
+  useEffect(() => scheduleIdle(() => void fetchTemplates()), [fetchTemplates]);
 
   const plan = useMemo(
     () => templates.find((t) => t._id === planId),

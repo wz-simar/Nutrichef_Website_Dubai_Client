@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HeroSection } from "@/components/home/HeroSection";
+import { HERO_SLIDES } from "@/lib/heroMedia";
 import { MenuPreview } from "@/components/home/MenuPreview";
 import { FeaturesSection } from "@/components/home/FeaturesSection";
 import { HowItWorks } from "@/components/home/HowItWorks";
@@ -27,8 +28,19 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default function Home() {
+  const lcp = HERO_SLIDES[0];
+
   return (
     <div className="flex min-h-screen flex-col">
+      <link
+        rel="preload"
+        as="image"
+        href="/hero/opt/farhana-828.avif"
+        type="image/avif"
+        imageSrcSet={lcp.avifSrcSet}
+        imageSizes="100vw"
+        fetchPriority="high"
+      />
       <HeroSection />
       <MenuPreview />
       <FeaturesSection />
