@@ -8,8 +8,6 @@ import {
   parseGoogtransTarget,
   scheduleInit,
 } from '@/lib/googleTranslateShared';
-import { scheduleIdle } from '@/lib/scheduleIdle';
-
 declare global {
   interface Window {
     googleTranslateElementInit?: () => void;
@@ -36,11 +34,7 @@ export function GoogleTranslateBootstrap() {
       onReady();
     };
 
-    if (parseGoogtransTarget()) {
-      load();
-      return;
-    }
-    return scheduleIdle(load, 15000);
+    if (parseGoogtransTarget()) load();
   }, []);
 
   return (

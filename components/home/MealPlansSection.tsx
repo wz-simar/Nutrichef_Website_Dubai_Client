@@ -12,12 +12,13 @@ import {
   type CarouselPlanCard,
   templateToCard,
 } from "@/lib/mealPlanTemplateDisplay";
-import { scheduleIdle } from "@/lib/scheduleIdle";
+import { whenNearViewport } from "@/lib/scheduleIdle";
 
 export const MealPlansSection = () => {
   const router = useRouter();
   const { currency } = useTenant();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
   const [plans, setPlans] = useState<CarouselPlanCard[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +34,10 @@ export const MealPlansSection = () => {
     }
   }, []);
 
-  useEffect(() => scheduleIdle(() => void fetchTemplates()), [fetchTemplates]);
+  useEffect(
+    () => whenNearViewport(sectionRef.current, () => void fetchTemplates(), "-80px"),
+    [fetchTemplates],
+  );
 
   const hasPlans = plans.length > 0;
 
@@ -45,7 +49,7 @@ export const MealPlansSection = () => {
   };
 
   return (
-    <section className="py-24 bg-surface overflow-hidden w-full">
+    <section ref={sectionRef} className="py-24 bg-surface overflow-hidden w-full">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12 w-full mb-10 lg:mb-12">
         <h2 className="font-heading text-[36px] md:text-[44px] font-semibold text-foreground mb-2 tracking-tight">
           Find your plan

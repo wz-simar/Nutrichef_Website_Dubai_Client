@@ -290,7 +290,6 @@ export const Navbar = () => {
             onClick={() => setOpen(false)}
           >
             <NutrichefLogo
-              priority
               className={`!h-8 max-w-[min(190px,58vw)] transition-[filter] duration-300 sm:!h-9 lg:!h-10 ${
                 transparent ? "brightness-0 invert" : ""
               }`}

@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { HERO_SLIDES } from "@/lib/heroMedia";
-import { scheduleIdle } from "@/lib/scheduleIdle";
 
 /**
  * Full-screen hero: client photography with per-slide copy, always
@@ -20,10 +19,13 @@ export const HeroSection = () => {
 
   const current = HERO_SLIDES[slide];
 
-  useEffect(() => scheduleIdle(() => setShowAllSlides(true), 1800), []);
+  useEffect(() => {
+    const id = window.setTimeout(() => setShowAllSlides(true), 4500);
+    return () => window.clearTimeout(id);
+  }, []);
 
   useEffect(() => {
-    const id = window.setTimeout(() => setMotionOn(true), 2500);
+    const id = window.setTimeout(() => setMotionOn(true), 8000);
     return () => window.clearTimeout(id);
   }, []);
 
@@ -47,10 +49,11 @@ export const HeroSection = () => {
     <section
       id="hero"
       className="relative isolate h-[100svh] min-h-[560px] w-full overflow-hidden bg-emerald-deep"
+      style={{ position: "relative", height: "100svh", minHeight: 560, width: "100%", overflow: "hidden" }}
     >
       {/* ── Slides ── */}
       {HERO_SLIDES.map((s, i) => {
-        if (!showAllSlides && i !== 0) return null;
+        if (i !== slide && !(showAllSlides && i === (slide + 1) % HERO_SLIDES.length)) return null;
         const active = i === slide;
         const posStyle = {
           "--pos-mobile": s.objectPositionMobile ?? s.objectPosition ?? "center",
@@ -62,12 +65,14 @@ export const HeroSection = () => {
             aria-hidden={!active}
             className="absolute inset-0"
             style={{
+              position: "absolute",
+              inset: 0,
               opacity: active ? 1 : 0,
-              transform: active ? "scale(1.05)" : "scale(1)",
+              transform: motionOn && active ? "scale(1.05)" : "none",
               transition: motionOn ? "opacity 1s ease, transform 8s linear" : "none",
             }}
           >
-            <picture className="absolute inset-0">
+            <picture className="absolute inset-0 block h-full w-full">
               <source type="image/avif" srcSet={s.avifSrcSet} sizes="100vw" />
               <source type="image/webp" srcSet={s.webpSrcSet} sizes="100vw" />
               <img
@@ -78,9 +83,16 @@ export const HeroSection = () => {
                 sizes="100vw"
                 fetchPriority={i === 0 ? "high" : "low"}
                 loading={i === 0 ? "eager" : "lazy"}
-                decoding="async"
+                decoding={i === 0 ? "sync" : "async"}
                 className="hero-media h-full w-full object-cover"
-                style={posStyle}
+                style={{
+                  ...posStyle,
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
               />
             </picture>
           </div>
