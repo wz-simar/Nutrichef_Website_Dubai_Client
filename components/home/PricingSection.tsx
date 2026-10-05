@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { fetchPublicTemplates } from "@/lib/publicTemplates";
 import { useTenant } from "@/contexts/TenantContext";
@@ -12,7 +12,7 @@ import {
   supportedDurationKeysPresent,
   type PlanDurationDayKey,
 } from "@/lib/mealPlanDurationTiers";
-import { scheduleIdle } from "@/lib/scheduleIdle";
+import { whenNearViewport } from "@/lib/scheduleIdle";
 
 /**
  * Public price checker on the home page: pick a plan, meals per day, and
@@ -74,6 +74,7 @@ export function PricingSection() {
   const [planId, setPlanId] = useState("");
   const [meals, setMeals] = useState(3);
   const [duration, setDuration] = useState<string>("");
+  const sectionRef = useRef<HTMLElement>(null);
 
   const fetchTemplates = useCallback(async () => {
     try {
@@ -87,7 +88,10 @@ export function PricingSection() {
     }
   }, []);
 
-  useEffect(() => scheduleIdle(() => void fetchTemplates()), [fetchTemplates]);
+  useEffect(
+    () => whenNearViewport(sectionRef.current, () => void fetchTemplates(), "-80px"),
+    [fetchTemplates],
+  );
 
   const plan = useMemo(
     () => templates.find((t) => t._id === planId),
@@ -118,6 +122,7 @@ export function PricingSection() {
 
   return (
     <section
+      ref={sectionRef}
       id="pricing"
       className="border-t border-border-subtle bg-background py-20 sm:py-24"
     >

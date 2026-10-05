@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { scheduleIdle } from "@/lib/scheduleIdle";
+import { whenNearViewport } from "@/lib/scheduleIdle";
 import { MENU_FILTERS } from "@/components/menu/FilterBar";
 import { api } from "@/lib/api";
 import type { PlanFilterId } from "@/lib/planFromMacros";
@@ -126,7 +126,10 @@ export const MenuPreview = () => {
     }
   }, []);
 
-  useEffect(() => scheduleIdle(() => void fetchRecipes()), [fetchRecipes]);
+  useEffect(
+    () => whenNearViewport(scope.current, () => void fetchRecipes(), "-80px"),
+    [fetchRecipes],
+  );
 
   const visibleMeals = useMemo(
     () => meals.filter((m) => mealMatchesTab(m, activeTab)),
@@ -140,7 +143,7 @@ export const MenuPreview = () => {
     let clearGuard = () => {};
     let revert = () => {};
 
-    const stop = scheduleIdle(() => {
+    const stop = whenNearViewport(scope.current, () => {
       void (async () => {
         const { gsap, guardAgainstRafStall } = await loadGsap();
         if (cancelled) return;
@@ -173,7 +176,7 @@ export const MenuPreview = () => {
         revert = () => ctx.revert();
         clearGuard = guardAgainstRafStall(ctx);
       })();
-    }, 2000);
+    }, "-80px");
 
     return () => {
       cancelled = true;
@@ -189,7 +192,7 @@ export const MenuPreview = () => {
     let clearGuard = () => {};
     let revert = () => {};
 
-    const stop = scheduleIdle(() => {
+    const stop = whenNearViewport(scope.current, () => {
       void (async () => {
         const { gsap, guardAgainstRafStall } = await loadGsap();
         if (cancelled) return;
@@ -225,7 +228,7 @@ export const MenuPreview = () => {
         revert = () => ctx.revert();
         clearGuard = guardAgainstRafStall(ctx);
       })();
-    }, 2000);
+    }, "-80px");
 
     return () => {
       cancelled = true;

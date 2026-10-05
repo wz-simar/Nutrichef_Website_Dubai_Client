@@ -42,13 +42,15 @@ export default function Home() {
         fetchPriority="high"
       />
       <HeroSection />
-      <MenuPreview />
-      <FeaturesSection />
-      <HowItWorks />
-      <MealPlansSection />
-      <PricingSection />
-      <MarketsSection />
-      <SubscribeCTA />
+      <div className="cv-auto">
+        <MenuPreview />
+        <FeaturesSection />
+        <HowItWorks />
+        <MealPlansSection />
+        <PricingSection />
+        <MarketsSection />
+        <SubscribeCTA />
+      </div>
     </div>
   );
 }
