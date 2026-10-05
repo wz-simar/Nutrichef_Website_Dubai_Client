@@ -6,6 +6,22 @@ import type { NextConfig } from "next";
  * lib/api.ts forces same-origin /api-backend when NEXT_PUBLIC_API_BASE_URL is a cross-origin URL.
  */
 const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      {
+        source: "/:path*.avif",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      {
+        source: "/:path*.webp",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+    ];
+  },
   async redirects() {
     return [
       {
@@ -16,7 +32,8 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
-    unoptimized: true,
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
     remotePatterns: [
       {
         protocol: 'https',

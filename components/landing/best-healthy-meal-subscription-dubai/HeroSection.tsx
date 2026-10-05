@@ -1,13 +1,10 @@
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
   hero,
   navTrustLine,
 } from "@/content/best-healthy-meal-subscription-dubai";
-
-const HERO_BACKGROUND_DESKTOP = "/complete_background.png";
-const HERO_BACKGROUND_MOBILE = "/complete_background_mobile.png";
+import { LandingCover } from "@/components/media/LandingCover";
 
 export function HeroSection() {
   return (
@@ -15,23 +12,7 @@ export function HeroSection() {
       id="hero"
       className="relative isolate flex min-h-screen w-full items-center overflow-hidden"
     >
-      <Image
-        src={HERO_BACKGROUND_MOBILE}
-        alt={hero.imageAlt}
-        fill
-        priority
-        sizes="100vw"
-        className="-z-20 object-cover object-center sm:hidden"
-      />
-      <Image
-        src={HERO_BACKGROUND_DESKTOP}
-        alt=""
-        fill
-        priority
-        sizes="100vw"
-        className="-z-20 hidden object-cover object-center sm:block"
-        aria-hidden
-      />
+      <LandingCover alt={hero.imageAlt} />
       <div
         className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-black/65 via-black/35 to-black/55 sm:bg-gradient-to-r sm:from-black/70 sm:via-black/30 sm:to-transparent"
         aria-hidden

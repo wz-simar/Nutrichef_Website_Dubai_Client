@@ -10,7 +10,13 @@
  */
 
 export interface HeroSlide {
+  /** Original master, kept for reference. The page serves the responsive sets below. */
   src: string;
+  /** AVIF candidates. Descriptor widths match the encoded files. */
+  avifSrcSet: string;
+  webpSrcSet: string;
+  /** Shown when the browser cannot pick a source. */
+  fallback: string;
   alt: string;
   eyebrow: string;
   headline: [string, string];
@@ -26,6 +32,9 @@ export interface HeroSlide {
 export const HERO_SLIDES: HeroSlide[] = [
   {
     src: "/hero/farhana.png",
+    avifSrcSet: "/hero/opt/farhana-828.avif 828w, /hero/opt/farhana-1536.avif 1536w",
+    webpSrcSet: "/hero/opt/farhana-828.webp 828w, /hero/opt/farhana-1536.webp 1536w",
+    fallback: "/hero/opt/farhana-1536.webp",
     alt: "NutriChef brand ambassador Farhana Bodi with fresh meal bowls and a green juice",
     eyebrow: "Farhana Bodi · Brand Ambassador",
     headline: ["Your goals,", "on the menu."],
@@ -36,6 +45,9 @@ export const HERO_SLIDES: HeroSlide[] = [
   },
   {
     src: "/hero/radheynew.png",
+    avifSrcSet: "/hero/opt/radhey-828.avif 828w, /hero/opt/radhey-1672.avif 1672w",
+    webpSrcSet: "/hero/opt/radhey-828.webp 828w, /hero/opt/radhey-1672.webp 1672w",
+    fallback: "/hero/opt/radhey-1672.webp",
     alt: "Celebrity Chef Radhey with a spread of NutriChef gourmet dishes",
     eyebrow: "Our celebrity chef",
     headline: ["Crafted by", "Chef Radhey."],
@@ -47,6 +59,9 @@ export const HERO_SLIDES: HeroSlide[] = [
   },
   {
     src: "/hero/hero.png",
+    avifSrcSet: "/hero/opt/box-828.avif 828w, /hero/opt/box-1672.avif 1672w",
+    webpSrcSet: "/hero/opt/box-828.webp 828w, /hero/opt/box-1672.webp 1672w",
+    fallback: "/hero/opt/box-1672.webp",
     alt: "NutriChef ready-to-eat meal box and cold-pressed juices",
     eyebrow: "Delivered daily · Dubai, Abu Dhabi, Sharjah & Ajman",
     headline: ["Fresh. Daily.", "Yours."],

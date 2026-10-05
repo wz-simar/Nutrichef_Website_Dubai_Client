@@ -1,13 +1,11 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
+import { LandingCover } from "@/components/media/LandingCover";
 import { hero } from "@/content/healthy-meal-delivery-dubai";
 
-const HERO_BACKGROUND_DESKTOP = "/complete_background.png";
-const HERO_BACKGROUND_MOBILE = "/complete_background_mobile.png";
 const HERO_ALT =
   "NutriChef fresh healthy meal delivery across Dubai with chef cooked daily plans";
 
@@ -19,23 +17,7 @@ export function HeroSection() {
       id="hero"
       className="relative isolate flex min-h-screen w-full items-center overflow-hidden"
     >
-      <Image
-        src={HERO_BACKGROUND_MOBILE}
-        alt={HERO_ALT}
-        fill
-        priority
-        sizes="100vw"
-        className="-z-20 object-cover object-center sm:hidden"
-      />
-      <Image
-        src={HERO_BACKGROUND_DESKTOP}
-        alt=""
-        fill
-        priority
-        sizes="100vw"
-        className="-z-20 hidden object-cover object-center sm:block"
-        aria-hidden
-      />
+      <LandingCover alt={HERO_ALT} />
       <div
         className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-black/65 via-black/35 to-black/55 sm:bg-gradient-to-r sm:from-black/70 sm:via-black/30 sm:to-transparent"
         aria-hidden

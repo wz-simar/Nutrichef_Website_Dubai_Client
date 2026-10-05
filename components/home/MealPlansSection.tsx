@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "../Button";
-import { api } from "@/lib/api";
+import { fetchPublicTemplates } from "@/lib/publicTemplates";
 import { useTenant } from "@/contexts/TenantContext";
 import { formatMajorUnits } from "@/lib/formatCurrency";
 import {
@@ -12,6 +12,7 @@ import {
   type CarouselPlanCard,
   templateToCard,
 } from "@/lib/mealPlanTemplateDisplay";
+import { scheduleIdle } from "@/lib/scheduleIdle";
 
 export const MealPlansSection = () => {
   const router = useRouter();
@@ -23,10 +24,7 @@ export const MealPlansSection = () => {
   const fetchTemplates = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get<{ templates: ApiTemplate[] }>("/menu/list?type=templates", {
-        noAuth: true,
-      });
-      const list = res.data?.templates ?? [];
+      const list = await fetchPublicTemplates<ApiTemplate>();
       setPlans(list.map((t) => templateToCard(t)));
     } catch {
       setPlans([]);
@@ -35,9 +33,7 @@ export const MealPlansSection = () => {
     }
   }, []);
 
-  useEffect(() => {
-    void fetchTemplates();
-  }, [fetchTemplates]);
+  useEffect(() => scheduleIdle(() => void fetchTemplates()), [fetchTemplates]);
 
   const hasPlans = plans.length > 0;
 

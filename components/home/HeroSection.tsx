@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { HERO_SLIDES } from "@/lib/heroMedia";
+import { scheduleIdle } from "@/lib/scheduleIdle";
 
 /**
  * Full-screen hero: client photography with per-slide copy, always
@@ -15,8 +15,21 @@ import { HERO_SLIDES } from "@/lib/heroMedia";
 export const HeroSection = () => {
   const router = useRouter();
   const [slide, setSlide] = useState(0);
+  const [showAllSlides, setShowAllSlides] = useState(false);
+  const [motionOn, setMotionOn] = useState(false);
 
   const current = HERO_SLIDES[slide];
+
+  useEffect(() => scheduleIdle(() => setShowAllSlides(true), 1800), []);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setMotionOn(true), 2500);
+    return () => window.clearTimeout(id);
+  }, []);
+
+  useEffect(() => {
+    if (slide !== 0) setShowAllSlides(true);
+  }, [slide]);
 
   useEffect(() => {
     if (HERO_SLIDES.length < 2) return;
@@ -37,6 +50,7 @@ export const HeroSection = () => {
     >
       {/* ── Slides ── */}
       {HERO_SLIDES.map((s, i) => {
+        if (!showAllSlides && i !== 0) return null;
         const active = i === slide;
         const posStyle = {
           "--pos-mobile": s.objectPositionMobile ?? s.objectPosition ?? "center",
@@ -50,18 +64,25 @@ export const HeroSection = () => {
             style={{
               opacity: active ? 1 : 0,
               transform: active ? "scale(1.05)" : "scale(1)",
-              transition: "opacity 1s ease, transform 8s linear",
+              transition: motionOn ? "opacity 1s ease, transform 8s linear" : "none",
             }}
           >
-            <Image
-              src={s.src}
-              alt={s.alt}
-              fill
-              priority={i === 0}
-              sizes="100vw"
-              className="hero-media object-cover"
-              style={posStyle}
-            />
+            <picture className="absolute inset-0">
+              <source type="image/avif" srcSet={s.avifSrcSet} sizes="100vw" />
+              <source type="image/webp" srcSet={s.webpSrcSet} sizes="100vw" />
+              <img
+                src={i === 0 ? "/hero/opt/farhana-828.avif" : s.fallback}
+                alt={s.alt}
+                width={i === 0 ? 1536 : 1672}
+                height={i === 0 ? 1024 : 941}
+                sizes="100vw"
+                fetchPriority={i === 0 ? "high" : "low"}
+                loading={i === 0 ? "eager" : "lazy"}
+                decoding="async"
+                className="hero-media h-full w-full object-cover"
+                style={posStyle}
+              />
+            </picture>
           </div>
         );
       })}

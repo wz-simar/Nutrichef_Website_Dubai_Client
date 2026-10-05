@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-
 type Props = {
   className?: string;
   priority?: boolean;
@@ -14,18 +12,21 @@ export function NutrichefLogo({
   priority = false,
   onDark = false,
 }: Props) {
+  const eager = priority && !onDark;
   const image = (
-    <Image
-      src="/logo.jpg"
+    <img
+      src="/brand/logo.webp"
       alt="Nutrichef"
-      width={240}
-      height={72}
+      width={480}
+      height={115}
+      fetchPriority={eager ? "high" : "auto"}
+      loading={eager ? "eager" : "lazy"}
+      decoding="async"
       className={
         onDark
           ? `h-9 w-auto max-w-[200px] object-contain object-left sm:h-10 ${className}`
           : `h-8 w-auto max-w-[min(200px,62vw)] object-contain object-left sm:h-9 lg:h-10 ${className}`
       }
-      priority={priority && !onDark}
     />
   );
 

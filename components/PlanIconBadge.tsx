@@ -24,7 +24,7 @@ export function PlanIconBadge({ size = 44, className = "", shape = "rounded" }: 
       style={{ width: size, height: size }}
     >
       <Image
-        src="/fav/android-chrome-512x512.png"
+        src="/brand/mark-96.webp"
         alt=""
         width={innerSize}
         height={innerSize}
