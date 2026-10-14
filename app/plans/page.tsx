@@ -16,9 +16,28 @@ import {
   daysForDurationKey,
   isPlanDurationDayKey,
   planDurationListTitle,
-  planDurationShortTitle,
   supportedDurationKeysPresent,
 } from "@/lib/mealPlanDurationTiers";
+import {
+  COOLER_BAG_FEE_AED,
+  MEAL_SLOT_OPTIONS,
+  OUTSIDE_DUBAI_FEE_AED,
+  UAE_EMIRATES,
+  WEEKDAYS,
+  apiErrorMessage,
+  formatLongDate,
+  lastDeliveryDate,
+  loadSavedAddress,
+  saveAddress,
+  tomorrowInput,
+  weekdayOf,
+  EMPTY_ADDRESS,
+  type BagType,
+  type DeliveryAddressDraft,
+  type Emirate,
+  type MealSlotId,
+  type QuoteResponse,
+} from "@/lib/orderDraft";
 
 interface BackendPlan {
   _id: string;
@@ -32,6 +51,8 @@ interface BackendPlan {
     breakfast?: Record<string, number>;
     lunch?: Record<string, number>;
     dinner?: Record<string, number>;
+    am_meal?: Record<string, number>;
+    pm_meal?: Record<string, number>;
   };
 }
 
@@ -80,8 +101,8 @@ const FALLBACK_PLAN_TYPES: PlanType[] = [
   { id: "glp1", title: "GLP-1 Support", desc: "High-protein plates for GLP-1 support", emoji: "⚖️", style: "default" },
 ];
 
-/** New pricing model: price = per-meal rate × meals/day × days. */
-const MEALS_PER_DAY_OPTIONS = [2, 3, 4, 5];
+const DEFAULT_MEAL_SLOTS: MealSlotId[] = ["breakfast", "lunch", "dinner"];
+const MIN_MEALS = 2;
 
 const FALLBACK_CYCLES: Cycle[] = [
   { id: "20", title: "20 days", subtext: "Programme length", priceDisplay: "—", save: null, amount: 0 },
@@ -145,23 +166,35 @@ function buildPlanDescription(goalType?: string, dietType?: string): string {
   return goal || diet || "Customized meal plan";
 }
 
-/** Per-slot prices are stored as `perMealRate × days`; total = slot price × meals/day. */
-function slotPriceForDuration(
+/**
+ * Per-slot prices are stored as `perMealRate × days`. Total = sum of the chosen slots;
+ * a slot without its own price uses the first priced of lunch / breakfast / dinner (same rule as the server).
+ */
+function planPriceForDuration(
   pricing: NonNullable<BackendPlan["pricing"]>,
-  dur: string
+  dur: string,
+  slots: readonly MealSlotId[]
 ): number | null {
-  for (const slot of ["lunch", "breakfast", "dinner"] as const) {
-    const v = pricing[slot]?.[dur];
-    if (v != null && v > 0) return v;
+  const priceOf = (slot: string): number | null => {
+    const v = (pricing as Record<string, Record<string, number> | undefined>)[slot]?.[dur];
+    return v != null && v > 0 ? v : null;
+  };
+  const fallback = priceOf("lunch") ?? priceOf("breakfast") ?? priceOf("dinner");
+  let total = 0;
+  for (const slot of slots) {
+    const v = priceOf(slot) ?? fallback;
+    if (v == null) return null;
+    total += v;
   }
-  return null;
+  return slots.length ? total : null;
 }
 
 function buildCycles(
   pricing: BackendPlan["pricing"],
-  mealsPerDay: number,
+  slots: readonly MealSlotId[],
   currency: string
 ): { cycles: Cycle[]; unsupportedLegacyOnly: boolean } {
+  const mealsPerDay = Math.max(1, slots.length);
   if (!pricing) {
     return { cycles: FALLBACK_CYCLES, unsupportedLegacyOnly: false };
   }
@@ -178,10 +211,9 @@ function buildCycles(
 
   const cycles: Cycle[] = [];
   for (const dur of sorted) {
-    const slotPrice = slotPriceForDuration(pricing, dur);
+    const total = planPriceForDuration(pricing, dur, slots);
     const days = daysForDurationKey(dur);
-    if (slotPrice == null || days == null) continue;
-    const total = slotPrice * mealsPerDay;
+    if (total == null || days == null) continue;
     const perMeal = total / (mealsPerDay * days);
     cycles.push({
       id: dur,
@@ -212,7 +244,18 @@ export default function PlansPage() {
   const [backendPlans, setBackendPlans] = useState<BackendPlan[]>([]);
   const [planTypes, setPlanTypes] = useState<PlanType[]>(FALLBACK_PLAN_TYPES);
   const [selectedPlan, setSelectedPlan] = useState("");
-  const [mealsPerDay, setMealsPerDay] = useState<number>(3);
+  const [mealSlots, setMealSlots] = useState<MealSlotId[]>(DEFAULT_MEAL_SLOTS);
+  const mealsPerDay = mealSlots.length;
+  const [startDate, setStartDate] = useState<string>(() => tomorrowInput());
+  const [offDays, setOffDays] = useState<number[]>([]);
+  const [address, setAddress] = useState<DeliveryAddressDraft>(EMPTY_ADDRESS);
+  const [bagType, setBagType] = useState<BagType>("paper");
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState("");
+  const [quote, setQuote] = useState<QuoteResponse | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [selectedCycle, setSelectedCycle] = useState("");
   const [cycles, setCycles] = useState<Cycle[]>(FALLBACK_CYCLES);
   const [unsupportedDurationTiers, setUnsupportedDurationTiers] = useState(false);
@@ -305,7 +348,7 @@ export default function PlansPage() {
       }
       return;
     }
-    const { cycles: c, unsupportedLegacyOnly } = buildCycles(plan.pricing, mealsPerDay, currency);
+    const { cycles: c, unsupportedLegacyOnly } = buildCycles(plan.pricing, mealSlots, currency);
     setCycles(c);
     setUnsupportedDurationTiers(unsupportedLegacyOnly);
     if (c.length > 0 && !c.find((cy) => cy.id === selectedCycle)) {
@@ -314,7 +357,97 @@ export default function PlansPage() {
     if (c.length === 0) {
       setSelectedCycle("");
     }
-  }, [selectedPlan, mealsPerDay, backendPlans, selectedCycle, currency]);
+  }, [selectedPlan, mealSlots, backendPlans, selectedCycle, currency]);
+
+  useEffect(() => {
+    setAddress(loadSavedAddress());
+  }, []);
+
+  const isBackendPlan = backendPlans.some((p) => p._id === selectedPlan);
+  const durationDays = isPlanDurationDayKey(selectedCycle) ? Number(selectedCycle) : null;
+  const startWeekday = weekdayOf(startDate);
+  const startOnOffDay = startWeekday != null && offDays.includes(startWeekday);
+  const planEnd = durationDays ? lastDeliveryDate(startDate, durationDays, offDays) : null;
+  const outsideDubai = address.emirate !== "Dubai";
+
+  useEffect(() => {
+    if (!isAuthenticated || !isBackendPlan || !durationDays || mealSlots.length < MIN_MEALS || !startDate || startOnOffDay) {
+      setQuote(null);
+      setQuoteError(null);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      setQuoteLoading(true);
+      try {
+        const res = await api.post<QuoteResponse>("/checkout/quote", {
+          templateId: selectedPlan,
+          durationDays,
+          mealSlots,
+          startDate,
+          offDays,
+          address: { emirate: address.emirate },
+          bagType,
+          ...(appliedCoupon ? { couponCode: appliedCoupon } : {}),
+        });
+        if (!cancelled) {
+          setQuote(res.data);
+          setQuoteError(null);
+        }
+      } catch (err: unknown) {
+        if (!cancelled) {
+          setQuote(null);
+          setQuoteError(apiErrorMessage(err, "Could not price this plan"));
+        }
+      } finally {
+        if (!cancelled) setQuoteLoading(false);
+      }
+    }, 350);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [
+    isAuthenticated,
+    isBackendPlan,
+    selectedPlan,
+    durationDays,
+    mealSlots,
+    startDate,
+    startOnOffDay,
+    offDays,
+    address.emirate,
+    bagType,
+    appliedCoupon,
+  ]);
+
+  const toggleSlot = (slot: MealSlotId) => {
+    setMealSlots((prev) => {
+      if (prev.includes(slot)) {
+        return prev.length <= MIN_MEALS ? prev : prev.filter((s) => s !== slot);
+      }
+      const order = MEAL_SLOT_OPTIONS.map((o) => o.id);
+      return [...prev, slot].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    });
+  };
+
+  const toggleOffDay = (day: number) => {
+    setOffDays((prev) => {
+      if (prev.includes(day)) return prev.filter((d) => d !== day);
+      if (prev.length >= 6) return prev;
+      return [...prev, day].sort((a, b) => a - b);
+    });
+  };
+
+  const updateAddress = (patch: Partial<DeliveryAddressDraft>) => {
+    setAddress((prev) => ({ ...prev, ...patch }));
+  };
+
+  const applyCoupon = () => {
+    setAppliedCoupon(couponInput.trim().toUpperCase());
+  };
+
+  const couponAccepted = Boolean(quote?.couponCode && appliedCoupon && quote.couponCode === appliedCoupon);
 
   const getSelectedPlanTitle = () =>
     planTypes.find((p) => p.id === selectedPlan)?.title || "";
@@ -330,23 +463,56 @@ export default function PlansPage() {
     const cycle = getCurrentCycle();
     if (!cycle || cycle.amount <= 0) return;
 
+    const problem = !isBackendPlan
+      ? "Please pick a plan above."
+      : !durationDays
+        ? "Please pick a plan duration."
+        : mealSlots.length < MIN_MEALS
+          ? `Choose at least ${MIN_MEALS} meals.`
+          : !startDate || startDate < tomorrowInput()
+            ? "Choose a start date from tomorrow."
+            : startOnOffDay
+              ? "Your start date is one of your off days. Pick another date or off day."
+              : address.line1.trim().length < 3
+                ? "Add your street, villa or flat number."
+                : !address.area.trim()
+                  ? "Add your area or community."
+                  : appliedCoupon && !couponAccepted
+                    ? quote?.couponError || "Remove the promo code that did not apply."
+                    : null;
+    if (problem) {
+      setFormError(problem);
+      document.getElementById("delivery-details")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    setFormError(null);
+
     setCheckoutLoading(true);
     try {
-      const templateId = backendPlans.find((p) => p._id === selectedPlan)?._id || selectedPlan;
-      const durationLabel = isPlanDurationDayKey(cycle.id)
-        ? planDurationShortTitle(cycle.id)
-        : cycle.title;
+      saveAddress(address);
       const res = await api.post<{ url: string; orderId: string }>(
         "/checkout/session",
         {
-          templateId,
-          amount: cycle.amount,
+          templateId: selectedPlan,
           currency: currency.toLowerCase(),
-          productName: `${getSelectedPlanTitle()} — ${durationLabel} · ${mealsPerDay} meals/day`,
           successUrl: `${window.location.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
           cancelUrl: `${window.location.origin}/payment/cancel`,
           planType: "standard",
-          durationDays: isPlanDurationDayKey(cycle.id) ? Number(cycle.id) : undefined,
+          durationDays,
+          mealSlots,
+          startDate,
+          offDays,
+          address: {
+            emirate: address.emirate,
+            area: address.area.trim() || undefined,
+            building: address.building.trim() || undefined,
+            line1: address.line1.trim(),
+            postalCode: address.postalCode.trim() || undefined,
+            landmark: address.landmark.trim() || undefined,
+            mapsUrl: address.mapsUrl.trim() || undefined,
+          },
+          bagType,
+          ...(appliedCoupon ? { couponCode: appliedCoupon } : {}),
           customer_creation: "always",
         }
       );
@@ -355,8 +521,7 @@ export default function PlansPage() {
         window.location.href = res.data.url;
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Checkout failed";
-      alert(message);
+      setFormError(apiErrorMessage(err, "Checkout failed. Please try again."));
     } finally {
       setCheckoutLoading(false);
     }
@@ -684,34 +849,43 @@ export default function PlansPage() {
               )}
             </section>
 
-            {/* Section 2: Meals per day (pricing = rate × meals × days) */}
+            {/* Section 2: Which meals (price = sum of chosen meal slots × days) */}
             <section>
               <h2 className="font-heading mb-2 text-[26px] font-semibold tracking-tight text-foreground">
-                How many meals per day?
+                Which meals do you want each day?
               </h2>
               <p className="mb-6 text-[14px] font-medium text-secondary-text">
-                Our chefs compose your day around your count — mains, sides, and
-                snacks included.
+                Pick at least {MIN_MEALS}. You have {mealsPerDay} meals a day.
               </p>
-              <div className="grid grid-cols-2 gap-[18px] sm:grid-cols-4">
-                {MEALS_PER_DAY_OPTIONS.map((count) => {
-                  const isActive = mealsPerDay === count;
+              <div className="grid grid-cols-2 gap-[14px] sm:grid-cols-3" role="group" aria-label="Meals each day">
+                {MEAL_SLOT_OPTIONS.map((slot) => {
+                  const isActive = mealSlots.includes(slot.id);
+                  const locked = isActive && mealSlots.length <= MIN_MEALS;
                   return (
                     <button
-                      key={count}
+                      key={slot.id}
                       type="button"
-                      onClick={() => setMealsPerDay(count)}
-                      className={`flex cursor-pointer flex-col items-center justify-center rounded-[16px] border-2 px-5 py-6 transition-colors ${
+                      aria-pressed={isActive}
+                      onClick={() => toggleSlot(slot.id)}
+                      title={locked ? `Keep at least ${MIN_MEALS} meals` : undefined}
+                      className={`flex min-h-[56px] cursor-pointer items-center justify-between gap-3 rounded-[16px] border-2 px-5 py-4 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                         isActive
                           ? "border-primary bg-primary/10"
                           : "border-border-subtle bg-surface shadow-sm hover:border-foreground/15"
                       }`}
                     >
-                      <span className="font-heading text-[28px] font-semibold leading-none text-foreground">
-                        {count}
-                      </span>
-                      <span className="mt-2 text-[13px] font-semibold text-secondary-text">
-                        meals / day
+                      <span className="text-[15px] font-semibold text-foreground">{slot.label}</span>
+                      <span
+                        aria-hidden
+                        className={`flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center rounded-md border-2 ${
+                          isActive ? "border-primary bg-primary text-white" : "border-border-subtle bg-surface"
+                        }`}
+                      >
+                        {isActive ? (
+                          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        ) : null}
                       </span>
                     </button>
                   );
@@ -779,6 +953,162 @@ export default function PlansPage() {
                 })}
               </div>
             </section>
+
+            {/* Section 5: Delivery schedule — off days push the end date */}
+            <section id="delivery-details" className="scroll-mt-32">
+              <h2 className="font-heading mb-2 text-[26px] font-semibold tracking-tight text-foreground">
+                When should we deliver?
+              </h2>
+              <p className="mb-6 text-[14px] font-medium text-secondary-text">
+                Pick your first delivery day and any weekly off days. Off days move your end
+                date later, so you still get every day you paid for.
+              </p>
+              <div className="grid gap-6 sm:grid-cols-[220px_1fr]">
+                <label className="flex flex-col gap-2">
+                  <span className="text-[13px] font-semibold text-foreground">Start date</span>
+                  <input
+                    type="date"
+                    value={startDate}
+                    min={tomorrowInput()}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="min-h-[48px] rounded-[14px] border border-border-subtle bg-surface px-4 text-[14px] font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </label>
+                <div className="flex flex-col gap-2">
+                  <span className="text-[13px] font-semibold text-foreground" id="off-days-label">
+                    Weekly off days (no delivery)
+                  </span>
+                  <div className="flex flex-wrap gap-2" role="group" aria-labelledby="off-days-label">
+                    {WEEKDAYS.map((day) => {
+                      const isOff = offDays.includes(day.id);
+                      return (
+                        <button
+                          key={day.id}
+                          type="button"
+                          aria-pressed={isOff}
+                          onClick={() => toggleOffDay(day.id)}
+                          className={`min-h-[44px] min-w-[52px] rounded-full border-2 px-3 text-[13px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                            isOff
+                              ? "border-foreground bg-foreground text-background"
+                              : "border-border-subtle bg-surface text-foreground hover:border-foreground/20"
+                          }`}
+                        >
+                          {day.short}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              <p className="mt-4 text-[13px] font-semibold text-secondary-text" aria-live="polite">
+                {startOnOffDay
+                  ? "Your start date is an off day. Choose another start date or off day."
+                  : planEnd && durationDays
+                    ? `${durationDays} delivery days, from ${formatLongDate(new Date(`${startDate}T00:00:00Z`))} to ${formatLongDate(planEnd)}.`
+                    : ""}
+              </p>
+            </section>
+
+            {/* Section 6: Delivery address */}
+            <section>
+              <h2 className="font-heading mb-2 text-[26px] font-semibold tracking-tight text-foreground">
+                Delivery address
+              </h2>
+              <p className="mb-6 text-[14px] font-medium text-secondary-text">
+                Free delivery in Dubai. Other emirates add AED {OUTSIDE_DUBAI_FEE_AED} once per order.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="flex flex-col gap-2">
+                  <span className="text-[13px] font-semibold text-foreground">Emirate</span>
+                  <select
+                    value={address.emirate}
+                    onChange={(e) => updateAddress({ emirate: e.target.value as Emirate })}
+                    className="min-h-[48px] rounded-[14px] border border-border-subtle bg-surface px-4 text-[14px] font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    {UAE_EMIRATES.map((e) => (
+                      <option key={e} value={e}>
+                        {e}
+                        {e === "Dubai" ? "" : ` (+AED ${OUTSIDE_DUBAI_FEE_AED})`}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {(
+                  [
+                    { key: "area", label: "Area / community", placeholder: "e.g. JLT, Al Nahda", auto: "address-level2" },
+                    { key: "building", label: "Building / villa name", placeholder: "e.g. Lake Tower 2", auto: "address-line2" },
+                    { key: "line1", label: "Flat, villa or street", placeholder: "e.g. Flat 1204, Cluster D", auto: "address-line1" },
+                    { key: "postalCode", label: "PIN / postal code (optional)", placeholder: "e.g. 00000", auto: "postal-code" },
+                    { key: "landmark", label: "Landmark (optional)", placeholder: "e.g. Next to Carrefour", auto: "off" },
+                  ] as const
+                ).map((f) => (
+                  <label key={f.key} className="flex flex-col gap-2">
+                    <span className="text-[13px] font-semibold text-foreground">{f.label}</span>
+                    <input
+                      type="text"
+                      value={address[f.key]}
+                      autoComplete={f.auto}
+                      placeholder={f.placeholder}
+                      onChange={(e) => updateAddress({ [f.key]: e.target.value })}
+                      className="min-h-[48px] rounded-[14px] border border-border-subtle bg-surface px-4 text-[14px] font-semibold text-foreground placeholder:text-secondary-text/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </label>
+                ))}
+                <label className="flex flex-col gap-2 sm:col-span-2">
+                  <span className="text-[13px] font-semibold text-foreground">Google Maps link (optional)</span>
+                  <input
+                    type="url"
+                    inputMode="url"
+                    value={address.mapsUrl}
+                    placeholder="Paste a pin link to help our driver"
+                    onChange={(e) => updateAddress({ mapsUrl: e.target.value })}
+                    className="min-h-[48px] rounded-[14px] border border-border-subtle bg-surface px-4 text-[14px] font-semibold text-foreground placeholder:text-secondary-text/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </label>
+              </div>
+            </section>
+
+            {/* Section 7: Packaging */}
+            <section>
+              <h2 className="font-heading mb-6 text-[26px] font-semibold tracking-tight text-foreground">
+                How should we pack it?
+              </h2>
+              <div className="grid gap-[14px] sm:grid-cols-2" role="radiogroup" aria-label="Packaging">
+                {(
+                  [
+                    { id: "paper", title: "Paper bag", detail: "Recyclable bag, free", price: "Free" },
+                    {
+                      id: "cooler",
+                      title: "Cooler bag",
+                      detail: "Insulated bag that keeps meals cold, yours to keep",
+                      price: `+AED ${COOLER_BAG_FEE_AED}`,
+                    },
+                  ] as const
+                ).map((opt) => {
+                  const isActive = bagType === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={isActive}
+                      onClick={() => setBagType(opt.id)}
+                      className={`flex min-h-[72px] items-center justify-between gap-4 rounded-[16px] border-2 px-5 py-4 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                        isActive
+                          ? "border-primary bg-primary/10"
+                          : "border-border-subtle bg-surface shadow-sm hover:border-foreground/15"
+                      }`}
+                    >
+                      <span>
+                        <span className="block text-[15px] font-semibold text-foreground">{opt.title}</span>
+                        <span className="mt-1 block text-[12px] font-medium text-secondary-text">{opt.detail}</span>
+                      </span>
+                      <span className="text-[13px] font-semibold text-foreground">{opt.price}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
           </div>
 
           {/* Right Column — sticky so pricing stays visible while browsing plans */}
@@ -819,16 +1149,52 @@ export default function PlansPage() {
                   <input
                     type="text"
                     placeholder="Add promotion code"
-                    className="w-full rounded-[14px] border border-border-subtle bg-surface py-[15px] pl-[38px] pr-4 text-[13px] font-semibold text-foreground placeholder:text-secondary-text/70 transition-shadow focus:outline-none focus:ring-2 focus:ring-primary"
+                    aria-label="Promotion code"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") applyCoupon();
+                    }}
+                    className="w-full rounded-[14px] border border-border-subtle bg-surface py-[15px] pl-[38px] pr-4 text-[13px] font-semibold uppercase text-foreground placeholder:normal-case placeholder:text-secondary-text/70 transition-shadow focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
-                <button
-                  type="button"
-                  className="rounded-[14px] bg-bg-light px-6 py-[15px] text-[13px] font-semibold tracking-tight text-secondary-text transition-colors hover:bg-foreground/10"
-                >
-                  Apply
-                </button>
+                {appliedCoupon ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAppliedCoupon("");
+                      setCouponInput("");
+                    }}
+                    className="rounded-[14px] bg-surface px-5 py-[15px] text-[13px] font-semibold tracking-tight text-foreground ring-1 ring-border-subtle transition-colors hover:bg-foreground/5"
+                  >
+                    Remove
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={applyCoupon}
+                    disabled={!couponInput.trim()}
+                    className="rounded-[14px] bg-foreground/5 px-6 py-[15px] text-[13px] font-semibold tracking-tight text-foreground transition-colors hover:bg-foreground/10 disabled:text-secondary-text"
+                  >
+                    Apply
+                  </button>
+                )}
               </div>
+              {appliedCoupon && !quoteLoading ? (
+                <p
+                  className={`-mt-6 mb-8 text-[12px] font-semibold ${couponAccepted ? "text-primary" : "text-red-700"}`}
+                  role="status"
+                >
+                  {couponAccepted
+                    ? `${appliedCoupon} applied.`
+                    : quote?.couponError || (quoteError ? "" : "Checking code…")}
+                </p>
+              ) : null}
+              {outsideDubai && !appliedCoupon ? (
+                <p className="-mt-6 mb-8 text-[12px] font-semibold text-secondary-text">
+                  First order outside Dubai? Use WELCOME200 for AED 200 off.
+                </p>
+              ) : null}
 
               {/* Rate note */}
               <div className="mb-10 flex items-center gap-3 rounded-[14px] border border-dashed border-border-subtle bg-surface p-4">
@@ -836,7 +1202,7 @@ export default function PlansPage() {
                   👨‍🍳
                 </span>
                 <span className="text-[12px] font-semibold leading-[1.5] text-secondary-text">
-                  Every programme includes free morning delivery and
+                  Every programme includes morning delivery (free in Dubai) and
                   nutritionist sign-off.
                 </span>
               </div>
@@ -846,35 +1212,76 @@ export default function PlansPage() {
                 <h4 className="mb-1 text-[14px] font-semibold tracking-tight text-foreground">
                   Payment summary
                 </h4>
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] font-semibold tracking-tight text-secondary-text">
-                    Plan price
-                  </span>
-                  <span className="text-[13px] font-semibold text-foreground">
-                    {getCurrentCycle()
-                      ? formatMinorUnits(getCurrentCycle()!.amount, currency)
-                      : "--"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between border-b border-border-subtle pb-[18px]">
-                  <span className="text-[13px] font-semibold tracking-tight text-secondary-text">
-                    Delivery fee
-                  </span>
-                  <span className="text-[13px] font-semibold text-foreground">
-                    {formatMinorUnits(0, currency)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between pt-2">
+                {(quote
+                  ? quote.lines.map((l) => ({
+                      key: l.code,
+                      label: l.code === "plan" ? "Plan price" : l.label,
+                      amountMinor: l.amountMinor,
+                    }))
+                  : [
+                      { key: "plan", label: "Plan price", amountMinor: getCurrentCycle()?.amount ?? 0 },
+                      ...(outsideDubai
+                        ? [{ key: "outside_dubai", label: "Outside Dubai delivery", amountMinor: OUTSIDE_DUBAI_FEE_AED * 100 }]
+                        : []),
+                      ...(bagType === "cooler"
+                        ? [{ key: "cooler_bag", label: "Cooler bag", amountMinor: COOLER_BAG_FEE_AED * 100 }]
+                        : []),
+                    ]
+                ).map((line) => (
+                  <div key={line.key} className="flex items-center justify-between">
+                    <span className="text-[13px] font-semibold tracking-tight text-secondary-text">
+                      {line.label}
+                    </span>
+                    <span
+                      className={`text-[13px] font-semibold ${line.amountMinor < 0 ? "text-primary" : "text-foreground"}`}
+                    >
+                      {line.amountMinor < 0 ? "−" : ""}
+                      {getCurrentCycle() ? formatMinorUnits(Math.abs(line.amountMinor), currency) : "--"}
+                    </span>
+                  </div>
+                ))}
+                {!outsideDubai ? (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[13px] font-semibold tracking-tight text-secondary-text">
+                      Delivery in Dubai
+                    </span>
+                    <span className="text-[13px] font-semibold text-foreground">Free</span>
+                  </div>
+                ) : null}
+                <div className="flex items-center justify-between border-t border-border-subtle pt-[18px]">
                   <span className="font-heading text-[16px] font-semibold tracking-tight text-foreground">
                     Total
                   </span>
-                  <span className="font-heading text-[16px] font-semibold tracking-tight text-foreground">
-                    {getCurrentCycle()
-                      ? formatMinorUnits(getCurrentCycle()!.amount, currency)
-                      : "--"}
+                  <span className="font-heading text-[16px] font-semibold tracking-tight text-foreground" aria-live="polite">
+                    {quote
+                      ? formatMinorUnits(quote.totalMinor, currency)
+                      : getCurrentCycle()
+                        ? formatMinorUnits(
+                            (getCurrentCycle()?.amount ?? 0) +
+                              (outsideDubai ? OUTSIDE_DUBAI_FEE_AED * 100 : 0) +
+                              (bagType === "cooler" ? COOLER_BAG_FEE_AED * 100 : 0),
+                            currency
+                          )
+                        : "--"}
                   </span>
                 </div>
+                {quoteLoading ? (
+                  <p className="text-[12px] font-medium text-secondary-text">Updating price…</p>
+                ) : quoteError ? (
+                  <p className="text-[12px] font-semibold text-red-700" role="alert">
+                    {quoteError}
+                  </p>
+                ) : null}
               </div>
+
+              {formError ? (
+                <p
+                  className="mb-4 rounded-[14px] border border-red-200 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-800"
+                  role="alert"
+                >
+                  {formError}
+                </p>
+              ) : null}
 
               {/* Checkout Btn */}
               <button
