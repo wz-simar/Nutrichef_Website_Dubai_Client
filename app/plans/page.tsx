@@ -262,6 +262,9 @@ export default function PlansPage() {
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [trialCheckoutLoading, setTrialCheckoutLoading] = useState(false);
+  const [trialDate, setTrialDate] = useState<string>(() => tomorrowInput());
+  const [trialQuote, setTrialQuote] = useState<QuoteResponse | null>(null);
+  const [trialError, setTrialError] = useState<string | null>(null);
   const [activeSubscription, setActiveSubscription] = useState<ActiveSubscriptionPayload | null>(null);
   const [subscriptionFetched, setSubscriptionFetched] = useState(false);
   const [subscriptionBannerDismissed, setSubscriptionBannerDismissed] = useState(false);
@@ -421,6 +424,31 @@ export default function PlansPage() {
     appliedCoupon,
   ]);
 
+  useEffect(() => {
+    const templateId = resolveTrialTemplateId(backendPlans, selectedPlan);
+    if (!isAuthenticated || !templateId) {
+      setTrialQuote(null);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await api.post<QuoteResponse>("/checkout/quote", {
+          planType: "trial",
+          templateId,
+          address: { emirate: address.emirate },
+        });
+        if (!cancelled) setTrialQuote(res.data);
+      } catch {
+        if (!cancelled) setTrialQuote(null);
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [isAuthenticated, backendPlans, selectedPlan, address.emirate]);
+
   const toggleSlot = (slot: MealSlotId) => {
     setMealSlots((prev) => {
       if (prev.includes(slot)) {
@@ -441,6 +469,7 @@ export default function PlansPage() {
 
   const updateAddress = (patch: Partial<DeliveryAddressDraft>) => {
     setAddress((prev) => ({ ...prev, ...patch }));
+    setTrialError(null);
   };
 
   const applyCoupon = () => {
@@ -528,6 +557,22 @@ export default function PlansPage() {
   };
 
   const handleTrialCheckout = async () => {
+    const problem =
+      address.line1.trim().length < 3
+        ? "Add your street, villa or flat number."
+        : !address.area.trim()
+          ? "Add your area or community."
+          : !trialDate || trialDate < tomorrowInput()
+            ? "Choose a delivery date from tomorrow."
+            : null;
+    if (problem) {
+      setTrialError(problem);
+      document.getElementById("trial-delivery")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    setTrialError(null);
+    saveAddress(address);
+
     if (!loggedIn) {
       router.push("/auth/login?redirect=/plans#trial");
       return;
@@ -535,7 +580,7 @@ export default function PlansPage() {
 
     const templateId = resolveTrialTemplateId(backendPlans, selectedPlan);
     if (!templateId) {
-      alert("Trial checkout is not available yet. Please pick a programme above or try again shortly.");
+      setTrialError("Trial checkout is not available yet. Please pick a programme below or try again shortly.");
       return;
     }
 
@@ -545,13 +590,21 @@ export default function PlansPage() {
         "/checkout/session",
         {
           templateId,
-          amount: TRIAL_PLAN.amountMinor,
-          currency: TRIAL_PLAN.currency,
           productName: TRIAL_PLAN.productName,
           successUrl: `${window.location.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
           cancelUrl: `${window.location.origin}/payment/cancel`,
           planType: "trial",
           durationDays: 1,
+          startDate: trialDate,
+          address: {
+            emirate: address.emirate,
+            area: address.area.trim() || undefined,
+            building: address.building.trim() || undefined,
+            line1: address.line1.trim(),
+            postalCode: address.postalCode.trim() || undefined,
+            landmark: address.landmark.trim() || undefined,
+            mapsUrl: address.mapsUrl.trim() || undefined,
+          },
           customer_creation: "always",
         }
       );
@@ -560,8 +613,7 @@ export default function PlansPage() {
         window.location.href = res.data.url;
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Trial checkout failed";
-      alert(message);
+      setTrialError(apiErrorMessage(err, "Trial checkout failed. Please try again."));
     } finally {
       setTrialCheckoutLoading(false);
     }
@@ -575,6 +627,15 @@ export default function PlansPage() {
     );
   }
 
+  const trialOutside = address.emirate !== "Dubai";
+  const trialFeeMinor =
+    trialQuote?.lines.find((line) => line.code === "outside_dubai")?.amountMinor ??
+    (trialOutside ? OUTSIDE_DUBAI_FEE_AED * 100 : 0);
+  const trialTotalMinor = trialQuote?.totalMinor ?? TRIAL_PLAN.amountMinor + (trialOutside ? trialFeeMinor : 0);
+  const trialPriceLabel = formatMajorUnits(trialTotalMinor / 100, "AED", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
   const subscribedTemplateId = activeSubscription ? resolveSubscribedTemplateId(activeSubscription) : null;
   const subscribedPlanTitle = activeSubscription ? resolveSubscriptionPlanTitle(activeSubscription) : null;
   const showSubscriptionBanner =
@@ -706,23 +767,99 @@ export default function PlansPage() {
                   Trial price
                 </p>
                 <p className="font-heading mt-1 text-[40px] font-semibold leading-none tracking-tight text-foreground">
-                  AED 99
+                  {trialPriceLabel}
                 </p>
                 <p className="mt-2 text-[13px] font-medium text-secondary-text">
                   2 meals + 1 detox + 1 snack
                 </p>
                 <p className="mt-3 text-[12px] font-semibold text-primary">
-                  Secure checkout with Stripe · Free delivery
+                  {trialOutside
+                    ? `Includes ${formatMajorUnits(trialFeeMinor / 100, "AED", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} delivery outside Dubai`
+                    : "Free delivery inside Dubai"}
                 </p>
+                {trialError ? (
+                  <p className="mt-3 text-[12px] font-semibold text-red-700" role="alert">
+                    {trialError}
+                  </p>
+                ) : null}
               </div>
               <button
                 type="button"
                 onClick={() => void handleTrialCheckout()}
                 disabled={trialCheckoutLoading || checkoutLoading}
-                className="mt-6 w-full rounded-full bg-primary py-[15px] text-[15px] font-semibold text-white shadow-sm transition hover:bg-primary-hover disabled:bg-primary/60"
+                className="mt-6 min-h-[48px] w-full rounded-full bg-primary py-[15px] text-[15px] font-semibold text-white shadow-sm transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:bg-primary/60"
               >
-                {trialCheckoutLoading ? "Opening Stripe…" : "Buy trial — AED 99 →"}
+                {trialCheckoutLoading ? "Opening Stripe…" : `Buy trial — ${trialPriceLabel} →`}
               </button>
+            </div>
+          </div>
+
+          <div id="trial-delivery" className="relative mt-8 rounded-[22px] bg-white p-5 text-foreground sm:p-6">
+            <h3 className="font-heading text-[20px] font-semibold tracking-tight">Where should we deliver it?</h3>
+            <p className="mt-1 text-[13px] font-medium text-secondary-text">
+              Delivery is included in Dubai. Other emirates add AED {OUTSIDE_DUBAI_FEE_AED}, once.
+            </p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <label className="flex flex-col gap-2">
+                <span className="text-[13px] font-semibold text-foreground">Delivery date</span>
+                <input
+                  type="date"
+                  value={trialDate}
+                  min={tomorrowInput()}
+                  onChange={(e) => {
+                    setTrialDate(e.target.value);
+                    setTrialError(null);
+                  }}
+                  className="min-h-[48px] rounded-[14px] border border-border-subtle bg-surface px-4 text-[14px] font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </label>
+              <label className="flex flex-col gap-2">
+                <span className="text-[13px] font-semibold text-foreground">Emirate</span>
+                <select
+                  value={address.emirate}
+                  onChange={(e) => updateAddress({ emirate: e.target.value as Emirate })}
+                  className="min-h-[48px] rounded-[14px] border border-border-subtle bg-surface px-4 text-[14px] font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  {UAE_EMIRATES.map((emirate) => (
+                    <option key={emirate} value={emirate}>
+                      {emirate}
+                      {emirate === "Dubai" ? " — free delivery" : ` — +AED ${OUTSIDE_DUBAI_FEE_AED}`}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {(
+                [
+                  { key: "area", label: "Area / community", placeholder: "e.g. JLT, Al Nahda", auto: "address-level2" },
+                  { key: "building", label: "Building / villa name", placeholder: "e.g. Lake Tower 2", auto: "address-line2" },
+                  { key: "line1", label: "Flat, villa or street", placeholder: "e.g. Flat 1204, Cluster D", auto: "address-line1" },
+                  { key: "postalCode", label: "PIN / postal code (optional)", placeholder: "e.g. 00000", auto: "postal-code" },
+                  { key: "landmark", label: "Landmark (optional)", placeholder: "e.g. Next to Carrefour", auto: "off" },
+                ] as const
+              ).map((field) => (
+                <label key={field.key} className="flex flex-col gap-2">
+                  <span className="text-[13px] font-semibold text-foreground">{field.label}</span>
+                  <input
+                    type="text"
+                    value={address[field.key]}
+                    autoComplete={field.auto}
+                    placeholder={field.placeholder}
+                    onChange={(e) => updateAddress({ [field.key]: e.target.value })}
+                    className="min-h-[48px] rounded-[14px] border border-border-subtle bg-surface px-4 text-[14px] font-semibold text-foreground placeholder:text-secondary-text/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </label>
+              ))}
+              <label className="flex flex-col gap-2 sm:col-span-2">
+                <span className="text-[13px] font-semibold text-foreground">Google Maps link (optional)</span>
+                <input
+                  type="url"
+                  inputMode="url"
+                  value={address.mapsUrl}
+                  placeholder="Paste a pin link to help our driver"
+                  onChange={(e) => updateAddress({ mapsUrl: e.target.value })}
+                  className="min-h-[48px] rounded-[14px] border border-border-subtle bg-surface px-4 text-[14px] font-semibold text-foreground placeholder:text-secondary-text/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </label>
             </div>
           </div>
         </section>
