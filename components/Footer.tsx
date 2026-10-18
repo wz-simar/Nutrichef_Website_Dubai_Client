@@ -64,6 +64,10 @@ const resourceLinks = [
     href: "/kids-meal-plan-dubai",
     label: "Kids Meal Plan Dubai",
   },
+  {
+    href: "/school-lunch-delivery-dubai",
+    label: "School Lunch Delivery Dubai",
+  },
 ] as const;
 
 export const Footer = () => {
