@@ -52,12 +52,16 @@ export const EMPTY_ADDRESS: DeliveryAddressDraft = {
   mapsUrl: "",
 };
 
+function fieldText(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
 /** Landmark and a maps link stay optional. The postal address itself does not. */
 export function incompleteAddressMessage(address: DeliveryAddressDraft): string | null {
-  if (address.line1.trim().length < 3) return "Add your street, villa or flat number.";
-  if (address.area.trim().length < 2) return "Add your area or community.";
-  if (address.building.trim().length < 2) return "Add the building or villa name.";
-  if (address.postalCode.trim().length < 3) return "Add the PIN or postal code.";
+  if (fieldText(address.line1).trim().length < 3) return "Add your street, villa or flat number.";
+  if (fieldText(address.area).trim().length < 2) return "Add your area or community.";
+  if (fieldText(address.building).trim().length < 2) return "Add the building or villa name.";
+  if (fieldText(address.postalCode).trim().length < 3) return "Add the PIN or postal code.";
   return null;
 }
 
@@ -87,9 +91,17 @@ export function loadSavedAddress(): DeliveryAddressDraft {
   try {
     const raw = localStorage.getItem(ADDRESS_STORAGE_KEY);
     if (!raw) return EMPTY_ADDRESS;
-    const parsed = JSON.parse(raw) as Partial<DeliveryAddressDraft>;
+    const parsed = JSON.parse(raw) as Partial<Record<keyof DeliveryAddressDraft, unknown>>;
     const emirate = UAE_EMIRATES.includes(parsed.emirate as Emirate) ? (parsed.emirate as Emirate) : "Dubai";
-    return { ...EMPTY_ADDRESS, ...parsed, emirate };
+    return {
+      emirate,
+      area: fieldText(parsed.area),
+      building: fieldText(parsed.building),
+      line1: fieldText(parsed.line1),
+      postalCode: fieldText(parsed.postalCode),
+      landmark: fieldText(parsed.landmark),
+      mapsUrl: fieldText(parsed.mapsUrl),
+    };
   } catch {
     return EMPTY_ADDRESS;
   }
