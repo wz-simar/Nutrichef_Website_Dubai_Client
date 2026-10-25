@@ -27,6 +27,7 @@ import {
   apiErrorMessage,
   formatLongDate,
   lastDeliveryDate,
+  incompleteAddressMessage,
   loadSavedAddress,
   saveAddress,
   tomorrowInput,
@@ -92,12 +93,10 @@ const FALLBACK_PLAN_TYPES: PlanType[] = [
   { id: "gut", title: "Gut Health", desc: "Fibre and ferment-rich food for a happy gut", emoji: "🦠", style: "default" },
   { id: "age", title: "Age Reverse", desc: "Antioxidant-dense menus for longevity", emoji: "⏳", style: "default" },
   { id: "custom", title: "Customized Meal Plan", desc: "Built with our chef around your exact needs", emoji: "👨‍🍳", style: "custom" },
-  { id: "pcod-pcos", title: "PCOD / PCOS Care", desc: "Hormone-balancing meals for PCOD & PCOS", emoji: "🌸", style: "default" },
+  { id: "pcod-pcos", title: "PCOS / Hormonal health", desc: "Hormone-balancing meals", emoji: "🌸", style: "default" },
   { id: "thyroid", title: "Thyroid Care", desc: "Nutrient-targeted meals that support thyroid function", emoji: "🦋", style: "default" },
   { id: "pregnancy", title: "Pregnancy Nutrition", desc: "Wholesome, doctor-informed meals for every trimester", emoji: "🤰", style: "default" },
   { id: "anti-inflammatory", title: "Anti-Inflammatory", desc: "Meals that calm chronic inflammation", emoji: "🫒", style: "default" },
-  { id: "endometriosis", title: "Endometriosis", desc: "Anti-inflammatory support for endometriosis", emoji: "💗", style: "default" },
-  { id: "pcos-hormonal", title: "PCOS, Hormonal Balancing", desc: "Hormone-balancing meals for PCOS", emoji: "🌸", style: "default" },
   { id: "glp1", title: "GLP-1 Support", desc: "High-protein plates for GLP-1 support", emoji: "⚖️", style: "default" },
 ];
 
@@ -287,8 +286,15 @@ export default function PlansPage() {
             kcal: planCalories(p),
           };
         });
-        setPlanTypes(mapped);
-        setSelectedPlan(mapped[0].id);
+        let keptHormonal = false;
+        const visible = mapped.flatMap((plan) => {
+          if (!/endometriosis|pcod|pcos/i.test(`${plan.title} ${plan.desc}`)) return [plan];
+          if (keptHormonal) return [];
+          keptHormonal = true;
+          return [{ ...plan, title: "PCOS / Hormonal health", desc: "Hormone-balancing meals" }];
+        });
+        setPlanTypes(visible);
+        setSelectedPlan(visible[0]?.id ?? mapped[0].id);
       } else {
         setSelectedPlan(FALLBACK_PLAN_TYPES[0].id);
       }
@@ -502,11 +508,9 @@ export default function PlansPage() {
             ? "Choose a start date from tomorrow."
             : startOnOffDay
               ? "Your start date is one of your off days. Pick another date or off day."
-              : address.line1.trim().length < 3
-                ? "Add your street, villa or flat number."
-                : !address.area.trim()
-                  ? "Add your area or community."
-                  : appliedCoupon && !couponAccepted
+              : incompleteAddressMessage(address)
+                ? incompleteAddressMessage(address)
+                : appliedCoupon && !couponAccepted
                     ? quote?.couponError || "Remove the promo code that did not apply."
                     : null;
     if (problem) {
@@ -534,9 +538,9 @@ export default function PlansPage() {
           address: {
             emirate: address.emirate,
             area: address.area.trim() || undefined,
-            building: address.building.trim() || undefined,
+            building: address.building.trim(),
             line1: address.line1.trim(),
-            postalCode: address.postalCode.trim() || undefined,
+            postalCode: address.postalCode.trim(),
             landmark: address.landmark.trim() || undefined,
             mapsUrl: address.mapsUrl.trim() || undefined,
           },
@@ -558,13 +562,10 @@ export default function PlansPage() {
 
   const handleTrialCheckout = async () => {
     const problem =
-      address.line1.trim().length < 3
-        ? "Add your street, villa or flat number."
-        : !address.area.trim()
-          ? "Add your area or community."
-          : !trialDate || trialDate < tomorrowInput()
-            ? "Choose a delivery date from tomorrow."
-            : null;
+      incompleteAddressMessage(address) ||
+      (!trialDate || trialDate < tomorrowInput()
+        ? "Choose a delivery date from tomorrow."
+        : null);
     if (problem) {
       setTrialError(problem);
       document.getElementById("trial-delivery")?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -599,9 +600,9 @@ export default function PlansPage() {
           address: {
             emirate: address.emirate,
             area: address.area.trim() || undefined,
-            building: address.building.trim() || undefined,
+            building: address.building.trim(),
             line1: address.line1.trim(),
-            postalCode: address.postalCode.trim() || undefined,
+            postalCode: address.postalCode.trim(),
             landmark: address.landmark.trim() || undefined,
             mapsUrl: address.mapsUrl.trim() || undefined,
           },
@@ -797,7 +798,7 @@ export default function PlansPage() {
           <div id="trial-delivery" className="relative mt-8 rounded-[22px] bg-white p-5 text-foreground sm:p-6">
             <h3 className="font-heading text-[20px] font-semibold tracking-tight">Where should we deliver it?</h3>
             <p className="mt-1 text-[13px] font-medium text-secondary-text">
-              Delivery is included in Dubai. Other emirates add AED {OUTSIDE_DUBAI_FEE_AED}, once.
+              Delivery is included in Dubai. Outside Dubai, the delivery charge is added in the trial price.
             </p>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-2">
@@ -823,7 +824,6 @@ export default function PlansPage() {
                   {UAE_EMIRATES.map((emirate) => (
                     <option key={emirate} value={emirate}>
                       {emirate}
-                      {emirate === "Dubai" ? " — free delivery" : ` — +AED ${OUTSIDE_DUBAI_FEE_AED}`}
                     </option>
                   ))}
                 </select>
@@ -833,7 +833,7 @@ export default function PlansPage() {
                   { key: "area", label: "Area / community", placeholder: "e.g. JLT, Al Nahda", auto: "address-level2" },
                   { key: "building", label: "Building / villa name", placeholder: "e.g. Lake Tower 2", auto: "address-line2" },
                   { key: "line1", label: "Flat, villa or street", placeholder: "e.g. Flat 1204, Cluster D", auto: "address-line1" },
-                  { key: "postalCode", label: "PIN / postal code (optional)", placeholder: "e.g. 00000", auto: "postal-code" },
+                  { key: "postalCode", label: "PIN / postal code", placeholder: "e.g. 00000", auto: "postal-code" },
                   { key: "landmark", label: "Landmark (optional)", placeholder: "e.g. Next to Carrefour", auto: "off" },
                 ] as const
               ).map((field) => (
@@ -1152,7 +1152,7 @@ export default function PlansPage() {
                 Delivery address
               </h2>
               <p className="mb-6 text-[14px] font-medium text-secondary-text">
-                Free delivery in Dubai. Other emirates add AED {OUTSIDE_DUBAI_FEE_AED} once per order.
+                Free delivery in Dubai. Outside Dubai, the delivery charge is added in the payment summary.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="flex flex-col gap-2">
@@ -1165,7 +1165,6 @@ export default function PlansPage() {
                     {UAE_EMIRATES.map((e) => (
                       <option key={e} value={e}>
                         {e}
-                        {e === "Dubai" ? "" : ` (+AED ${OUTSIDE_DUBAI_FEE_AED})`}
                       </option>
                     ))}
                   </select>
@@ -1175,7 +1174,7 @@ export default function PlansPage() {
                     { key: "area", label: "Area / community", placeholder: "e.g. JLT, Al Nahda", auto: "address-level2" },
                     { key: "building", label: "Building / villa name", placeholder: "e.g. Lake Tower 2", auto: "address-line2" },
                     { key: "line1", label: "Flat, villa or street", placeholder: "e.g. Flat 1204, Cluster D", auto: "address-line1" },
-                    { key: "postalCode", label: "PIN / postal code (optional)", placeholder: "e.g. 00000", auto: "postal-code" },
+                    { key: "postalCode", label: "PIN / postal code", placeholder: "e.g. 00000", auto: "postal-code" },
                     { key: "landmark", label: "Landmark (optional)", placeholder: "e.g. Next to Carrefour", auto: "off" },
                   ] as const
                 ).map((f) => (

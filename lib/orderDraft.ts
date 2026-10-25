@@ -52,6 +52,15 @@ export const EMPTY_ADDRESS: DeliveryAddressDraft = {
   mapsUrl: "",
 };
 
+/** Landmark and a maps link stay optional. The postal address itself does not. */
+export function incompleteAddressMessage(address: DeliveryAddressDraft): string | null {
+  if (address.line1.trim().length < 3) return "Add your street, villa or flat number.";
+  if (address.area.trim().length < 2) return "Add your area or community.";
+  if (address.building.trim().length < 2) return "Add the building or villa name.";
+  if (address.postalCode.trim().length < 3) return "Add the PIN or postal code.";
+  return null;
+}
+
 export interface QuoteLine {
   code: string;
   label: string;
