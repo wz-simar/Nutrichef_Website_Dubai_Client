@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -268,6 +268,7 @@ export default function PlansPage() {
   const [subscriptionFetched, setSubscriptionFetched] = useState(false);
   const [subscriptionBannerDismissed, setSubscriptionBannerDismissed] = useState(false);
   const [previewPlanId, setPreviewPlanId] = useState<string | null>(null);
+  const payLock = useRef(false);
 
   const fetchPlans = useCallback(async () => {
     try {
@@ -288,7 +289,9 @@ export default function PlansPage() {
         });
         let keptHormonal = false;
         const visible = mapped.flatMap((plan) => {
-          if (!/endometriosis|pcod|pcos/i.test(`${plan.title} ${plan.desc}`)) return [plan];
+          const blob = `${plan.title} ${plan.desc}`;
+          if (/endometriosis/i.test(blob)) return [];
+          if (!/pcod|pcos/i.test(blob)) return [plan];
           if (keptHormonal) return [];
           keptHormonal = true;
           return [{ ...plan, title: "PCOS / Hormonal health", desc: "Hormone-balancing meals" }];
@@ -490,6 +493,7 @@ export default function PlansPage() {
   const getCurrentCycle = () => cycles.find((c) => c.id === selectedCycle);
 
   const handleCheckout = async () => {
+    if (payLock.current) return;
     if (!loggedIn) {
       router.push("/auth/login?redirect=/plans");
       return;
@@ -520,6 +524,7 @@ export default function PlansPage() {
     }
     setFormError(null);
 
+    payLock.current = true;
     setCheckoutLoading(true);
     try {
       saveAddress(address);
@@ -556,11 +561,13 @@ export default function PlansPage() {
     } catch (err: unknown) {
       setFormError(apiErrorMessage(err, "Checkout failed. Please try again."));
     } finally {
+      payLock.current = false;
       setCheckoutLoading(false);
     }
   };
 
   const handleTrialCheckout = async () => {
+    if (payLock.current) return;
     const problem =
       incompleteAddressMessage(address) ||
       (!trialDate || trialDate < tomorrowInput()
@@ -585,6 +592,7 @@ export default function PlansPage() {
       return;
     }
 
+    payLock.current = true;
     setTrialCheckoutLoading(true);
     try {
       const res = await api.post<{ url: string; orderId: string }>(
@@ -616,6 +624,7 @@ export default function PlansPage() {
     } catch (err: unknown) {
       setTrialError(apiErrorMessage(err, "Trial checkout failed. Please try again."));
     } finally {
+      payLock.current = false;
       setTrialCheckoutLoading(false);
     }
   };
