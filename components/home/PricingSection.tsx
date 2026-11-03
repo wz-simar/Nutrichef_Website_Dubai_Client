@@ -1,86 +1,48 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
-import { fetchPublicTemplates } from "@/lib/publicTemplates";
 import { useTenant } from "@/contexts/TenantContext";
 import { formatMajorUnits } from "@/lib/formatCurrency";
-import { GOAL_EMOJIS } from "@/lib/mealPlanTemplateDisplay";
 import { PACKAGE_DURATION_KEYS, type PackageDurationKey } from "@/lib/nutrichefPackages";
 import {
   buildPriceCompare,
   getPackagesForFamily,
   packagePriceAed,
-  resolvePackageFamily,
   type PackageCode,
+  type PackageFamily,
 } from "@/lib/nutrichefPackages";
 import { whenNearViewport } from "@/lib/scheduleIdle";
 
 /**
- * Public price checker: pick a programme + Plan A/B/C + duration → package total.
- * Checkout continues on /plans.
+ * Public price checker: estimate with package sheet + Plan A/B/C + duration.
+ * Exact diet plan category is collected only in registration questions.
  */
 
-interface ApiTemplate {
-  _id: string;
-  title: string;
-  goalType?: string;
-  dietType?: string;
-  structure?: {
-    nutrition?: { calories?: number; protein?: number; carbs?: number; fat?: number };
-  };
-}
-
-function emojiFor(t: ApiTemplate): string {
-  const keys = [t.dietType, t.goalType, t.title]
-    .filter(Boolean)
-    .map((k) => String(k).toLowerCase());
-  for (const k of keys) if (GOAL_EMOJIS[k]) return GOAL_EMOJIS[k];
-  for (const k of keys)
-    for (const [pattern, emoji] of Object.entries(GOAL_EMOJIS))
-      if (k.includes(pattern)) return emoji;
-  return "🍽️";
-}
+const FAMILY_OPTIONS: { id: PackageFamily; label: string; hint: string }[] = [
+  {
+    id: "weight_loss",
+    label: "Weight loss sheet",
+    hint: "Fat loss, GLP-1, PCOS, diabetic & balanced",
+  },
+  {
+    id: "muscle_gain",
+    label: "Muscle gain sheet",
+    hint: "Protein-forward Plan A / B / C",
+  },
+];
 
 export function PricingSection() {
   const { currency } = useTenant();
-  const [templates, setTemplates] = useState<ApiTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [planId, setPlanId] = useState("");
+  const [family, setFamily] = useState<PackageFamily>("weight_loss");
   const [packageCode, setPackageCode] = useState<PackageCode>("A");
   const [duration, setDuration] = useState<PackageDurationKey>("20");
+  const [ready, setReady] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
 
-  const fetchTemplates = useCallback(async () => {
-    try {
-      const list = await fetchPublicTemplates<ApiTemplate>();
-      setTemplates(list);
-      if (list.length > 0) setPlanId(list[0]._id);
-    } catch {
-      setTemplates([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(
-    () => whenNearViewport(sectionRef.current, () => void fetchTemplates(), "-80px"),
-    [fetchTemplates],
-  );
-
-  const plan = useMemo(
-    () => templates.find((t) => t._id === planId),
-    [templates, planId],
-  );
-
-  const family = useMemo(
-    () =>
-      resolvePackageFamily({
-        title: plan?.title,
-        goalType: plan?.goalType,
-        dietType: plan?.dietType,
-      }),
-    [plan],
+    () => whenNearViewport(sectionRef.current, () => setReady(true), "-80px"),
+    [],
   );
 
   const packages = useMemo(() => getPackagesForFamily(family), [family]);
@@ -124,71 +86,55 @@ export function PricingSection() {
             Check your price.
           </h2>
           <p className="mt-3 text-lg text-secondary-text">
-            Pick a programme, Plan A / B / C, and length — your package price
-            appears instantly. No sign-up needed.
+            Estimate with Plan A / B / C and length. Your exact diet plan category
+            is chosen only in registration questions.
           </p>
         </div>
 
-        {loading ? (
+        {!ready ? (
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
                 className="h-24 animate-pulse rounded-2xl border border-border-subtle bg-bg-light"
               />
             ))}
           </div>
-        ) : templates.length === 0 ? (
-          <p className="mt-10 text-secondary-text">
-            Plans are loading slowly — see{" "}
-            <Link href="/plans" className="font-semibold text-primary underline-offset-4 hover:underline">
-              the plan builder
-            </Link>
-            .
-          </p>
         ) : (
           <div className="mt-10 grid gap-10 lg:grid-cols-12">
             <div className="lg:col-span-7">
               <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-secondary-text">
-                1 · Your programme
+                1 · Price sheet (estimate)
               </p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {templates.map((t) => {
-                  const active = t._id === planId;
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {FAMILY_OPTIONS.map((opt) => {
+                  const active = family === opt.id;
                   return (
                     <button
-                      key={t._id}
+                      key={opt.id}
                       type="button"
-                      onClick={() => setPlanId(t._id)}
-                      className={`flex min-h-11 min-w-0 items-start gap-3 rounded-2xl border-2 p-4 text-left transition ${
+                      onClick={() => setFamily(opt.id)}
+                      className={`flex min-h-11 min-w-0 flex-col rounded-2xl border-2 p-4 text-left transition ${
                         active
                           ? "border-primary bg-primary/10"
                           : "border-border-subtle bg-surface shadow-sm hover:border-foreground/15"
                       }`}
                     >
-                      <span className="text-2xl leading-none" aria-hidden>
-                        {emojiFor(t)}
+                      <span className="text-[0.9375rem] font-semibold text-foreground">
+                        {opt.label}
                       </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[0.9375rem] font-semibold leading-snug text-foreground">
-                          {t.title}
-                        </span>
-                        <span
-                          className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[0.6875rem] font-bold ${
-                            active
-                              ? "bg-primary/15 text-primary"
-                              : "bg-bg-light text-secondary-text"
-                          }`}
-                        >
-                          {resolvePackageFamily(t) === "muscle_gain"
-                            ? "Muscle gain sheet"
-                            : "Weight loss sheet"}
-                        </span>
-                      </span>
+                      <span className="mt-1 text-[0.75rem] text-secondary-text">{opt.hint}</span>
                     </button>
                   );
                 })}
               </div>
+              <p className="mt-3 text-[13px] font-medium text-secondary-text">
+                Fat Loss, Muscle Gain, PCOS, and the rest are picked in{" "}
+                <Link href="/auth/register" className="font-semibold text-primary underline-offset-2 hover:underline">
+                  questions
+                </Link>
+                — not here.
+              </p>
 
               <p className="mb-4 mt-8 text-sm font-bold uppercase tracking-[0.18em] text-secondary-text">
                 2 · Package
@@ -248,7 +194,8 @@ export function PricingSection() {
                   Your package
                 </p>
                 <p className="font-heading mt-3 text-lg font-semibold leading-snug">
-                  {plan?.title ?? "—"} · {selectedPkg?.title ?? "—"}
+                  {family === "muscle_gain" ? "Muscle gain" : "Weight loss"} ·{" "}
+                  {selectedPkg?.title ?? "—"}
                 </p>
                 <p className="mt-1 text-sm text-white/60">
                   {quote ? `${quote.summary} · ${quote.days} days` : "—"}

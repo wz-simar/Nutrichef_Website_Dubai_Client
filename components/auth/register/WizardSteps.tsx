@@ -213,14 +213,14 @@ export function Step4Goals({ state, setState }: WizardStepProps) {
     <div className="space-y-5">
       <header>
         <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-[1.65rem]">
-          Define your path
+          Which diet plan category?
         </h1>
         <p className={`mt-2 ${bodyMuted}`}>
-          Pick the goal that fits best right now. Your coach and menu can adapt as your goals
-          evolve.
+          Choose once here — this sets your programme. You will not be asked again on the plans
+          page.
         </p>
       </header>
-      <div className="flex flex-col gap-3" role="radiogroup" aria-label="Primary goal">
+      <div className="flex flex-col gap-3" role="radiogroup" aria-label="Diet plan category">
         {GOAL_OPTIONS.map((g) => {
           const sel = state.goal === g.api;
           return (

@@ -17,31 +17,87 @@ export const REGISTER_BODY_TYPE =
 
 export const REGISTER_TOTAL_STEPS = 12;
 
+/** Diet plan categories — collected only in register questions (not on /plans). */
 export const GOAL_OPTIONS = [
+  {
+    api: "fatloss",
+    label: "Fat Loss",
+    desc: "Calorie-controlled meals that melt fat, not muscle.",
+  },
+  {
+    api: "muscle_gain",
+    label: "Muscle Gain",
+    desc: "Protein-forward plates built for strength.",
+  },
+  {
+    api: "maintenance",
+    label: "Balanced Diet",
+    desc: "Everyday nutrition, perfectly proportioned.",
+  },
+  {
+    api: "diabetic",
+    label: "Diabetic Friendly",
+    desc: "Low-GI meals that keep blood sugar steady.",
+  },
+  {
+    api: "gut_health",
+    label: "Gut Health",
+    desc: "Fibre and ferment-rich food for a happy gut.",
+  },
+  {
+    api: "age_reverse",
+    label: "Age Reverse",
+    desc: "Antioxidant-dense menus for longevity.",
+  },
+  {
+    api: "pcos_pcod",
+    label: "PCOD / PCOS Care",
+    desc: "Hormone-balancing meals for PCOD & PCOS.",
+  },
+  {
+    api: "thyroid",
+    label: "Thyroid Care",
+    desc: "Nutrient-targeted meals that support thyroid function.",
+  },
+  {
+    api: "pregnancy",
+    label: "Pregnancy Nutrition",
+    desc: "Wholesome, doctor-informed meals for every trimester.",
+  },
+  {
+    api: "anti_inflammatory",
+    label: "Anti-Inflammatory",
+    desc: "Meals that calm chronic inflammation.",
+  },
+  {
+    api: "endometriosis",
+    label: "Endometriosis",
+    desc: "Anti-inflammatory support for endometriosis.",
+  },
+  {
+    api: "hormonal_balance",
+    label: "PCOS, Hormonal Balancing",
+    desc: "Hormone-balancing meals for PCOS.",
+  },
+  {
+    api: "glp1",
+    label: "GLP-1 Support",
+    desc: "High-protein plates for GLP-1 support.",
+  },
+  {
+    api: "custom",
+    label: "Customized Meal Plan",
+    desc: "Built with our chef around your exact needs.",
+  },
   {
     api: "health",
     label: "Eat Healthy",
     desc: "Whole foods and balanced meals tailored to you.",
   },
   {
-    api: "fatloss",
-    label: "Lose Weight",
-    desc: "Sustainable portions to support steady progress.",
-  },
-  {
     api: "weight_gain",
     label: "Gain Weight",
     desc: "Nutrient-dense meals with comfortable portions.",
-  },
-  {
-    api: "muscle_gain",
-    label: "Build Muscle",
-    desc: "Higher protein to complement your training.",
-  },
-  {
-    api: "maintenance",
-    label: "Maintain Weight",
-    desc: "Keep energy and habits consistent week to week.",
   },
 ] as const;
 
