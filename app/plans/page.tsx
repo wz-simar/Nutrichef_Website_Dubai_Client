@@ -18,6 +18,7 @@ import {
   PLAN_DURATION_DAY_KEYS,
 } from "@/lib/mealPlanDurationTiers";
 import {
+  buildPriceCompare,
   getPackagesForFamily,
   mealSlotsForPackage,
   packageAllowsPmAddOn,
@@ -29,6 +30,7 @@ import {
   type PackageCode,
   type PackageFamily,
 } from "@/lib/nutrichefPackages";
+import { PriceCompareSummary } from "@/components/plans/PriceCompareSummary";
 import {
   COOLER_BAG_FEE_AED,
   OUTSIDE_DUBAI_FEE_AED,
@@ -1410,23 +1412,42 @@ export default function PlansPage() {
                     <span className="text-[13px] font-semibold text-foreground">Free</span>
                   </div>
                 ) : null}
-                <div className="flex items-center justify-between border-t border-border-subtle pt-[18px]">
-                  <span className="font-heading text-[16px] font-semibold tracking-tight text-foreground">
-                    Total
-                  </span>
-                  <span className="font-heading text-[16px] font-semibold tracking-tight text-foreground" aria-live="polite">
-                    {quote
-                      ? formatMinorUnits(quote.totalMinor, currency)
-                      : getCurrentCycle()
-                        ? formatMinorUnits(
-                            (getCurrentCycle()?.amount ?? 0) +
-                              (outsideDubai ? OUTSIDE_DUBAI_FEE_AED * 100 : 0) +
-                              (bagType === "cooler" ? COOLER_BAG_FEE_AED * 100 : 0),
-                            currency
-                          )
-                        : "--"}
-                  </span>
-                </div>
+                {(() => {
+                  const planMinor =
+                    quote?.lines.find((l) => l.code === "plan")?.amountMinor ??
+                    getCurrentCycle()?.amount ??
+                    0;
+                  const compare =
+                    durationDays && planMinor > 0
+                      ? buildPriceCompare(planMinor / 100, durationDays)
+                      : null;
+                  if (!compare) {
+                    return (
+                      <div className="flex items-center justify-between border-t border-border-subtle pt-[18px]">
+                        <span className="font-heading text-[16px] font-semibold tracking-tight text-foreground">
+                          Total
+                        </span>
+                        <span className="font-heading text-[16px] font-semibold tracking-tight text-foreground">
+                          --
+                        </span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="border-t border-border-subtle pt-[18px]" aria-live="polite">
+                      <PriceCompareSummary compare={compare} currency={currency} />
+                      {quote && quote.totalMinor !== planMinor ? (
+                        <p className="mt-3 text-right text-[12px] font-semibold text-secondary-text">
+                          Payable now{" "}
+                          <span className="text-foreground">
+                            {formatMinorUnits(quote.totalMinor, currency)}
+                          </span>
+                          {outsideDubai || bagType === "cooler" ? " (incl. fees)" : ""}
+                        </p>
+                      ) : null}
+                    </div>
+                  );
+                })()}
                 {quoteLoading ? (
                   <p className="text-[12px] font-medium text-secondary-text">Updating price…</p>
                 ) : quoteError ? (
@@ -1450,7 +1471,7 @@ export default function PlansPage() {
                 type="button"
                 onClick={handleCheckout}
                 disabled={checkoutLoading || !selectedCycle}
-                className="w-full rounded-full bg-primary py-[16px] text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:bg-primary/60"
+                className="hidden w-full rounded-full bg-primary py-[16px] text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:bg-primary/60 lg:block"
               >
                 {checkoutLoading ? "Processing..." : "Continue"}
               </button>
@@ -1467,6 +1488,34 @@ export default function PlansPage() {
         onClose={() => setPreviewPlanId(null)}
         onSelectPlan={(id) => setSelectedPlan(id)}
       />
+
+      {/* Mobile sticky: gift compare + Continue (matches checkout mock) */}
+      {(() => {
+        const planMinor =
+          quote?.lines.find((l) => l.code === "plan")?.amountMinor ??
+          getCurrentCycle()?.amount ??
+          0;
+        const compare =
+          durationDays && planMinor > 0
+            ? buildPriceCompare(planMinor / 100, durationDays)
+            : null;
+        if (!compare) return null;
+        return (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border-subtle bg-surface/95 px-4 py-3 shadow-[0_-8px_30px_rgba(13,33,23,0.12)] backdrop-blur-md lg:hidden">
+            <div className="mx-auto flex max-w-7xl items-center gap-3">
+              <PriceCompareSummary compare={compare} currency={currency} compact className="min-w-0 flex-1" />
+              <button
+                type="button"
+                onClick={handleCheckout}
+                disabled={checkoutLoading || !selectedCycle}
+                className="h-12 min-w-[7.5rem] shrink-0 rounded-xl bg-primary px-4 text-[14px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:bg-primary/60"
+              >
+                {checkoutLoading ? "…" : "Continue"}
+              </button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

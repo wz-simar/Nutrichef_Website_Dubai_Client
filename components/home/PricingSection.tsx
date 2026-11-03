@@ -8,6 +8,7 @@ import { formatMajorUnits } from "@/lib/formatCurrency";
 import { GOAL_EMOJIS } from "@/lib/mealPlanTemplateDisplay";
 import { PACKAGE_DURATION_KEYS, type PackageDurationKey } from "@/lib/nutrichefPackages";
 import {
+  buildPriceCompare,
   getPackagesForFamily,
   packagePriceAed,
   resolvePackageFamily,
@@ -100,12 +101,14 @@ export function PricingSection() {
     const total = packagePriceAed(family, selectedPkg.code, Number(duration));
     if (total == null) return null;
     const days = Number(duration);
+    const compare = buildPriceCompare(total, days);
     return {
       total,
       days,
       perDay: total / days,
       macros: selectedPkg.macros,
       summary: selectedPkg.summary,
+      compare,
     };
   }, [family, selectedPkg, duration]);
 
@@ -257,15 +260,46 @@ export function PricingSection() {
                   </p>
                 ) : null}
 
-                <p className="font-heading mt-6 text-5xl font-semibold tracking-tight">
-                  {quote ? formatMajorUnits(quote.total, currency) : "—"}
-                </p>
-                {quote ? (
-                  <p className="mt-2 text-sm text-white/60">
-                    {formatMajorUnits(Math.round(quote.perDay), currency)}/day ·
-                    free delivery
+                {quote?.compare ? (
+                  <div className="mt-6">
+                    <p className="text-sm text-white/55">
+                      <span className="line-through decoration-white/50">
+                        {formatMajorUnits(quote.compare.listAed, currency, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        })}
+                      </span>
+                    </p>
+                    <p className="font-heading text-5xl font-semibold tracking-tight text-gold-soft">
+                      {formatMajorUnits(quote.compare.saleAed, currency, {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      })}
+                    </p>
+                    <p className="mt-2 text-sm text-white/60">
+                      Weekly{" "}
+                      <span className="line-through decoration-white/40">
+                        {formatMajorUnits(quote.compare.weeklyListAed, currency, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        })}
+                      </span>{" "}
+                      <span className="font-semibold text-gold-soft">
+                        {formatMajorUnits(quote.compare.weeklySaleAed, currency, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        })}
+                      </span>
+                      {" · "}
+                      {formatMajorUnits(Math.round(quote.perDay), currency)}/day ·
+                      free delivery
+                    </p>
+                  </div>
+                ) : (
+                  <p className="font-heading mt-6 text-5xl font-semibold tracking-tight">
+                    —
                   </p>
-                ) : null}
+                )}
 
                 <Link
                   href="/plans"

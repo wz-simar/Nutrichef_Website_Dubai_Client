@@ -116,6 +116,44 @@ const MUSCLE_GAIN_PACKAGES: Record<PackageCode, PackageDefinition> = {
 /** Floor package on the sheet (WL Plan A · 20 days). */
 export const PACKAGE_STARTING_AED = WEIGHT_LOSS_PACKAGES.A.pricesAed["20"];
 
+/**
+ * Marketing compare-at: sale is 20% off list (matches checkout mock Weekly/Total strikes).
+ * Charged amount stays the sheet/sale total — list is display-only.
+ */
+export const PACKAGE_SALE_OF_LIST = 0.8;
+
+/** List (was) price in AED major units from the sale/package total. */
+export function compareAtListAed(saleAed: number): number {
+  if (!Number.isFinite(saleAed) || saleAed <= 0) return 0;
+  return Math.round(saleAed / PACKAGE_SALE_OF_LIST);
+}
+
+/** Weekly share of a programme total (calendar days → weeks). */
+export function weeklyShareAed(totalAed: number, durationDays: number): number {
+  if (!Number.isFinite(totalAed) || totalAed <= 0 || !Number.isFinite(durationDays) || durationDays <= 0) {
+    return 0;
+  }
+  return Math.round((totalAed * 7) / durationDays);
+}
+
+export interface PriceComparePair {
+  saleAed: number;
+  listAed: number;
+  weeklySaleAed: number;
+  weeklyListAed: number;
+}
+
+export function buildPriceCompare(saleAed: number, durationDays: number): PriceComparePair | null {
+  if (!Number.isFinite(saleAed) || saleAed <= 0 || !durationDays) return null;
+  const listAed = compareAtListAed(saleAed);
+  return {
+    saleAed: Math.round(saleAed),
+    listAed,
+    weeklySaleAed: weeklyShareAed(saleAed, durationDays),
+    weeklyListAed: weeklyShareAed(listAed, durationDays),
+  };
+}
+
 export function isPackageDurationKey(value: string | number): value is PackageDurationKey {
   return PACKAGE_DURATION_KEYS.includes(String(value) as PackageDurationKey);
 }
