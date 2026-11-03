@@ -67,7 +67,7 @@ export function CountryCodeSelect({ value, onChange, className = "", id }: Count
   };
 
   const triggerClasses =
-    "flex w-[110px] shrink-0 cursor-pointer items-center justify-between gap-1 rounded-xl border border-border-subtle bg-surface px-3 py-3.5 text-left text-[14px] font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background";
+    "flex w-[5.75rem] shrink-0 cursor-pointer items-center justify-between gap-1 rounded-xl border border-border-subtle bg-surface px-2.5 py-3.5 text-left text-[14px] font-semibold text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:w-[110px] sm:px-3";
 
   return (
     <div ref={rootRef} className={`relative ${className}`}>
