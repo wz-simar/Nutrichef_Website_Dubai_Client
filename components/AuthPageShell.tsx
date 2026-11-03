@@ -34,7 +34,7 @@ export function AuthPageShell({
             <NutrichefLogo className="!h-9 sm:!h-10" priority />
           </Link>
         </div>
-        <div className="rounded-2xl border border-border-subtle bg-surface p-6 shadow-[0_24px_64px_-24px_rgba(27,48,34,0.12)] sm:p-8">
+        <div className="overflow-x-clip rounded-2xl border border-border-subtle bg-surface p-5 shadow-[0_24px_64px_-24px_rgba(27,48,34,0.12)] sm:p-8">
           {showHeader ? (
             <div className="mb-8 text-center">
               {title ? (

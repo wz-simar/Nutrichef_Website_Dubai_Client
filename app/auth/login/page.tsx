@@ -97,7 +97,7 @@ function LoginContent() {
           <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-foreground">
             Phone number
           </label>
-          <div className="flex gap-3">
+          <div className="flex min-w-0 items-stretch gap-2 sm:gap-3">
             <CountryCodeSelect
               value={countrySelection}
               onChange={setCountrySelection}
@@ -107,8 +107,10 @@ function LoginContent() {
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
               placeholder="Enter phone number"
-              className="flex-1 rounded-xl border border-border-subtle bg-background px-4 py-3.5 text-sm font-medium text-foreground placeholder:text-secondary-text/70 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface"
+              className="min-w-0 flex-1 rounded-xl border border-border-subtle bg-background px-3 py-3.5 text-sm font-medium text-foreground placeholder:text-secondary-text/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:px-4"
               autoFocus
+              autoComplete="tel"
+              inputMode="numeric"
             />
           </div>
         </div>
