@@ -30,6 +30,8 @@ import {
   type PackageCode,
   type PackageFamily,
 } from "@/lib/nutrichefPackages";
+import { resolvePlanIdForGoal } from "@/lib/resolvePlanFromGoal";
+import { GOAL_OPTIONS } from "@/lib/registerApiMapping";
 import { PriceCompareSummary } from "@/components/plans/PriceCompareSummary";
 import {
   COOLER_BAG_FEE_AED,
@@ -218,7 +220,7 @@ function buildPackageCycles(
 export default function PlansPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
-  const { isAuthenticated: loggedIn } = useAuth();
+  const { isAuthenticated: loggedIn, user } = useAuth();
   const { currency } = useTenant();
 
   const [backendPlans, setBackendPlans] = useState<BackendPlan[]>([]);
@@ -277,7 +279,13 @@ export default function PlansPage() {
           return [{ ...plan, title: "PCOS / Hormonal health", desc: "Hormone-balancing meals" }];
         });
         setPlanTypes(visible);
-        setSelectedPlan(visible[0]?.id ?? mapped[0].id);
+        // Programme comes from registration questions (user.goal) — not re-picked here.
+        const fromGoal = resolvePlanIdForGoal(plans, user?.goal);
+        const preferred =
+          visible.find((p) => p.id === fromGoal)?.id ??
+          visible[0]?.id ??
+          mapped[0].id;
+        setSelectedPlan(preferred);
       } else {
         setSelectedPlan(FALLBACK_PLAN_TYPES[0].id);
       }
@@ -286,13 +294,21 @@ export default function PlansPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.goal]);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchPlans();
     }
   }, [isAuthenticated, fetchPlans]);
+
+  // If profile goal loads/changes after plans, re-bind template.
+  useEffect(() => {
+    if (!backendPlans.length) return;
+    const id = resolvePlanIdForGoal(backendPlans, user?.goal);
+    if (id && id !== selectedPlan) setSelectedPlan(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to goal / plan list
+  }, [user?.goal, backendPlans]);
 
   useEffect(() => {
     if (typeof sessionStorage === "undefined") return;
@@ -711,8 +727,8 @@ export default function PlansPage() {
             Down to the Gram.
           </h1>
           <p className="mt-4 max-w-xl text-[15px] font-medium leading-relaxed text-secondary-text">
-            Choose your programme, your meals, and your rhythm — our chefs and
-            nutritionist handle everything after checkout.
+            Your diet plan category comes from registration questions. Here you
+            pick package, length, and delivery — our chefs handle the rest.
           </p>
         </div>
 
@@ -882,110 +898,83 @@ export default function PlansPage() {
           </span>
         </div>
 
-        {/* Plan preference heading sits above the two-column row so the
-            pricing card aligns with the first row of plan cards. */}
-        <h2 className="font-heading mb-6 text-[26px] font-semibold tracking-tight text-foreground">
-          What kind of meals do you prefer?
-        </h2>
-
         {/* Two Column Layout: left scrolls with the page, right stays sticky */}
         <div className="relative flex flex-col gap-[60px] lg:flex-row lg:items-start lg:gap-[80px]">
           {/* Left Column */}
           <div className="flex min-w-0 flex-1 flex-col gap-14">
-            {/* Section 1: Plan Preferences */}
+            {/* Programme locked from registration questions */}
             <section>
+              <h2 className="font-heading mb-2 text-[26px] font-semibold tracking-tight text-foreground">
+                Your diet plan category
+              </h2>
+              <p className="mb-6 text-[14px] font-medium text-secondary-text">
+                Set in your registration questions — not chosen again here.
+              </p>
               {loading ? (
-                <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="min-h-[170px] animate-pulse rounded-[24px] border-2 border-border-subtle bg-bg-light p-[22px]"
-                    />
-                  ))}
-                </div>
+                <div className="min-h-[120px] animate-pulse rounded-[24px] border-2 border-border-subtle bg-bg-light p-[22px]" />
               ) : (
-                <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2">
-                  {planTypes.map((plan) => {
-                    const isActive = selectedPlan === plan.id;
+                (() => {
+                  const plan =
+                    planTypes.find((p) => p.id === selectedPlan) ?? planTypes[0];
+                  const goalLabel =
+                    GOAL_OPTIONS.find((g) => g.api === user?.goal)?.label ?? null;
+                  if (!plan) {
                     return (
-                      <div
-                        key={plan.id}
-                        onClick={() => setSelectedPlan(plan.id)}
-                        className={`relative flex min-h-[170px] cursor-pointer flex-col justify-between rounded-[24px] border-2 p-[22px] transition-all ${
-                          isActive
-                            ? "border-primary bg-primary/10 shadow-sm"
-                            : "border-border-subtle bg-surface shadow-sm hover:border-foreground/15"
-                        }`}
-                      >
-                        <div className="mb-6 flex items-start justify-between">
-                          <div className="pr-4">
-                            <h3 className="mb-1.5 text-[17px] font-semibold text-foreground">
-                              {plan.title}
-                            </h3>
-                            <p className="pr-1 text-[13px] font-medium leading-[1.4] text-secondary-text">
-                              {plan.desc}
-                            </p>
-                            {plan.kcal ? (
-                              <span
-                                className={`mt-2 inline-block rounded-full px-2.5 py-1 text-[11px] font-bold ${
-                                  isActive
-                                    ? "bg-primary/15 text-primary"
-                                    : "bg-bg-light text-secondary-text"
-                                }`}
-                              >
-                                ~{plan.kcal.toLocaleString()} kcal/day
-                              </span>
-                            ) : null}
-                          </div>
-                          <div className="text-[42px] leading-none">{plan.emoji}</div>
-                        </div>
-                        <div className="mt-auto flex items-center justify-between pt-2">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPreviewPlanId(plan.id);
-                            }}
-                            className="flex items-center gap-1 text-[13px] font-semibold text-primary underline-offset-2 hover:underline"
-                          >
-                            Learn More{" "}
-                            <span className="text-[12px] font-medium">&rarr;</span>
-                          </button>
-                          {isActive ? (
-                            <div className="flex items-center gap-1.5 rounded-full bg-primary-hover px-3 py-[7px] text-white shadow-sm">
-                              <svg
-                                className="ml-0.5 h-3 w-3"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                              </svg>
-                              <span className="mr-1 text-[11.5px] font-[800] tracking-tight">
-                                Selected
-                              </span>
-                            </div>
-                          ) : plan.style === "custom" ? (
-                            <div className="rounded-full bg-primary/10 px-[18px] py-[7px] text-primary">
-                              <span className="text-[12px] font-semibold tracking-tight">
-                                Build my plan
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="rounded-full bg-primary/10 px-[18px] py-[7px] text-primary transition-colors hover:bg-primary/15">
-                              <span className="text-[12px] font-[800] tracking-tight">
-                                Select Plan
-                              </span>
-                            </div>
-                          )}
-                        </div>
+                      <div className="rounded-[24px] border-2 border-dashed border-border-subtle bg-surface p-6">
+                        <p className="text-sm font-medium text-secondary-text">
+                          No programme on your profile yet.
+                        </p>
+                        <Link
+                          href="/profile/goal"
+                          className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-primary underline-offset-2 hover:underline"
+                        >
+                          Answer the diet plan category question →
+                        </Link>
                       </div>
                     );
-                  })}
-                </div>
+                  }
+                  return (
+                    <div className="flex flex-col gap-4 rounded-[24px] border-2 border-primary bg-primary/10 p-[22px] shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex min-w-0 items-start gap-4">
+                        <span className="text-[42px] leading-none" aria-hidden>
+                          {plan.emoji}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-bold uppercase tracking-wide text-primary">
+                            From your questions
+                          </p>
+                          <h3 className="mt-1 text-[17px] font-semibold text-foreground">
+                            {plan.title}
+                          </h3>
+                          <p className="mt-1 text-[13px] font-medium leading-[1.4] text-secondary-text">
+                            {goalLabel ? `You chose “${goalLabel}”. ` : null}
+                            {plan.desc}
+                          </p>
+                          {plan.kcal ? (
+                            <span className="mt-2 inline-block rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-bold text-primary">
+                              ~{plan.kcal.toLocaleString()} kcal/day
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewPlanId(plan.id)}
+                          className="min-h-11 rounded-full border border-border-subtle bg-surface px-5 text-[13px] font-semibold text-foreground"
+                        >
+                          Learn more
+                        </button>
+                        <Link
+                          href="/profile/goal"
+                          className="inline-flex min-h-11 items-center rounded-full bg-foreground px-5 text-[13px] font-semibold text-primary"
+                        >
+                          Change in questions
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })()
               )}
             </section>
 
@@ -1486,7 +1475,10 @@ export default function PlansPage() {
         planTitle={planTypes.find((p) => p.id === previewPlanId)?.title}
         planEmoji={planTypes.find((p) => p.id === previewPlanId)?.emoji}
         onClose={() => setPreviewPlanId(null)}
-        onSelectPlan={(id) => setSelectedPlan(id)}
+        onSelectPlan={() => {
+          setPreviewPlanId(null);
+          router.push("/profile/goal");
+        }}
       />
 
       {/* Mobile sticky: gift compare + Continue (matches checkout mock) */}
