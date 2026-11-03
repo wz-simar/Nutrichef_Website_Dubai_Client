@@ -1,12 +1,9 @@
 /**
- * Meal-plan templates expose per-slot pricing with duration keys "20", "24",
- * "30", "90" (string keys in JSON) — the programme lengths in calendar days.
- *
- * Pricing is linear: each slot's price for a duration equals
- * `perMealRate × days`, so a plan's total is `slotPrice × mealsPerDay`.
+ * Meal-plan programme lengths sold on NutriChef: 20 / 24 / 28 calendar days
+ * (Nov 2026 package sheet). Package totals live in `nutrichefPackages.ts`.
  */
 
-export const PLAN_DURATION_DAY_KEYS = ["20", "24", "30", "90"] as const;
+export const PLAN_DURATION_DAY_KEYS = ["20", "24", "28"] as const;
 export type PlanDurationDayKey = (typeof PLAN_DURATION_DAY_KEYS)[number];
 
 const SUPPORTED = new Set<string>(PLAN_DURATION_DAY_KEYS);
@@ -28,7 +25,9 @@ export function supportedDurationKeysPresent(rawKeys: Iterable<string>): PlanDur
   for (const k of rawKeys) {
     if (typeof k === "string" && k.trim()) raw.add(k.trim());
   }
-  return PLAN_DURATION_DAY_KEYS.filter((k) => raw.has(k));
+  const present = PLAN_DURATION_DAY_KEYS.filter((k) => raw.has(k));
+  // Package sheet always offers 20/24/28 even before Mongo is re-saved.
+  return present.length > 0 ? present : [...PLAN_DURATION_DAY_KEYS];
 }
 
 export function planDurationListTitle(key: PlanDurationDayKey): string {

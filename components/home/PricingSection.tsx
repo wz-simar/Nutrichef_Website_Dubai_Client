@@ -6,18 +6,19 @@ import { fetchPublicTemplates } from "@/lib/publicTemplates";
 import { useTenant } from "@/contexts/TenantContext";
 import { formatMajorUnits } from "@/lib/formatCurrency";
 import { GOAL_EMOJIS } from "@/lib/mealPlanTemplateDisplay";
+import { PACKAGE_DURATION_KEYS, type PackageDurationKey } from "@/lib/nutrichefPackages";
 import {
-  collectRawDurationKeysFromPricing,
-  daysForDurationKey,
-  supportedDurationKeysPresent,
-  type PlanDurationDayKey,
-} from "@/lib/mealPlanDurationTiers";
+  buildPriceCompare,
+  getPackagesForFamily,
+  packagePriceAed,
+  resolvePackageFamily,
+  type PackageCode,
+} from "@/lib/nutrichefPackages";
 import { whenNearViewport } from "@/lib/scheduleIdle";
 
 /**
- * Public price checker on the home page: pick a plan, meals per day, and
- * duration → live total, per-day cost, and the plan's daily calories.
- * No login required; checkout continues on /plans.
+ * Public price checker: pick a programme + Plan A/B/C + duration → package total.
+ * Checkout continues on /plans.
  */
 
 interface ApiTemplate {
@@ -28,14 +29,7 @@ interface ApiTemplate {
   structure?: {
     nutrition?: { calories?: number; protein?: number; carbs?: number; fat?: number };
   };
-  pricing?: {
-    breakfast?: Record<string, number>;
-    lunch?: Record<string, number>;
-    dinner?: Record<string, number>;
-  };
 }
-
-const MEALS_OPTIONS = [2, 3, 4, 5];
 
 function emojiFor(t: ApiTemplate): string {
   const keys = [t.dietType, t.goalType, t.title]
@@ -48,32 +42,13 @@ function emojiFor(t: ApiTemplate): string {
   return "🍽️";
 }
 
-function caloriesFor(t: ApiTemplate): number | null {
-  const n = t.structure?.nutrition;
-  if (!n) return null;
-  if (n.calories && n.calories > 0) return Math.round(n.calories);
-  const p = n.protein ?? 0;
-  const c = n.carbs ?? 0;
-  const f = n.fat ?? 0;
-  const kcal = p * 4 + c * 4 + f * 9;
-  return kcal > 0 ? Math.round(kcal) : null;
-}
-
-function slotPriceFor(t: ApiTemplate, dur: string): number | null {
-  for (const slot of ["lunch", "breakfast", "dinner"] as const) {
-    const v = t.pricing?.[slot]?.[dur];
-    if (v != null && v > 0) return v;
-  }
-  return null;
-}
-
 export function PricingSection() {
   const { currency } = useTenant();
   const [templates, setTemplates] = useState<ApiTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [planId, setPlanId] = useState("");
-  const [meals, setMeals] = useState(3);
-  const [duration, setDuration] = useState<string>("");
+  const [packageCode, setPackageCode] = useState<PackageCode>("A");
+  const [duration, setDuration] = useState<PackageDurationKey>("20");
   const sectionRef = useRef<HTMLElement>(null);
 
   const fetchTemplates = useCallback(async () => {
@@ -95,30 +70,47 @@ export function PricingSection() {
 
   const plan = useMemo(
     () => templates.find((t) => t._id === planId),
-    [templates, planId]
+    [templates, planId],
   );
 
-  const durations: PlanDurationDayKey[] = useMemo(() => {
-    if (!plan?.pricing) return [];
-    return supportedDurationKeysPresent(
-      collectRawDurationKeysFromPricing(plan.pricing, ["breakfast", "lunch", "dinner"])
-    );
-  }, [plan]);
+  const family = useMemo(
+    () =>
+      resolvePackageFamily({
+        title: plan?.title,
+        goalType: plan?.goalType,
+        dietType: plan?.dietType,
+      }),
+    [plan],
+  );
+
+  const packages = useMemo(() => getPackagesForFamily(family), [family]);
+
+  const selectedPkg = useMemo(
+    () => packages.find((p) => p.code === packageCode) ?? packages[0],
+    [packages, packageCode],
+  );
 
   useEffect(() => {
-    if (durations.length > 0 && !durations.includes(duration as PlanDurationDayKey)) {
-      setDuration(durations[0]);
+    if (!packages.some((p) => p.code === packageCode)) {
+      setPackageCode(packages[0]?.code ?? "A");
     }
-  }, [durations, duration]);
+  }, [packages, packageCode]);
 
   const quote = useMemo(() => {
-    if (!plan || !duration) return null;
-    const slot = slotPriceFor(plan, duration);
-    const days = daysForDurationKey(duration);
-    if (slot == null || days == null) return null;
-    const total = slot * meals;
-    return { total, days, perDay: total / days, perMeal: total / (meals * days) };
-  }, [plan, duration, meals]);
+    if (!selectedPkg) return null;
+    const total = packagePriceAed(family, selectedPkg.code, Number(duration));
+    if (total == null) return null;
+    const days = Number(duration);
+    const compare = buildPriceCompare(total, days);
+    return {
+      total,
+      days,
+      perDay: total / days,
+      macros: selectedPkg.macros,
+      summary: selectedPkg.summary,
+      compare,
+    };
+  }, [family, selectedPkg, duration]);
 
   return (
     <section
@@ -132,8 +124,8 @@ export function PricingSection() {
             Check your price.
           </h2>
           <p className="mt-3 text-lg text-secondary-text">
-            Pick a plan, meals per day, and length — your price appears
-            instantly. No sign-up needed.
+            Pick a programme, Plan A / B / C, and length — your package price
+            appears instantly. No sign-up needed.
           </p>
         </div>
 
@@ -156,21 +148,19 @@ export function PricingSection() {
           </p>
         ) : (
           <div className="mt-10 grid gap-10 lg:grid-cols-12">
-            {/* Plan cards with calories */}
             <div className="lg:col-span-7">
               <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-secondary-text">
-                1 · Your plan
+                1 · Your programme
               </p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {templates.map((t) => {
                   const active = t._id === planId;
-                  const kcal = caloriesFor(t);
                   return (
                     <button
                       key={t._id}
                       type="button"
                       onClick={() => setPlanId(t._id)}
-                      className={`flex min-w-0 items-start gap-3 rounded-2xl border-2 p-4 text-left transition ${
+                      className={`flex min-h-11 min-w-0 items-start gap-3 rounded-2xl border-2 p-4 text-left transition ${
                         active
                           ? "border-primary bg-primary/10"
                           : "border-border-subtle bg-surface shadow-sm hover:border-foreground/15"
@@ -183,17 +173,17 @@ export function PricingSection() {
                         <span className="block truncate text-[0.9375rem] font-semibold leading-snug text-foreground">
                           {t.title}
                         </span>
-                        {kcal ? (
-                          <span
-                            className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[0.6875rem] font-bold ${
-                              active
-                                ? "bg-primary/15 text-primary"
-                                : "bg-bg-light text-secondary-text"
-                            }`}
-                          >
-                            ~{kcal.toLocaleString()} kcal/day
-                          </span>
-                        ) : null}
+                        <span
+                          className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[0.6875rem] font-bold ${
+                            active
+                              ? "bg-primary/15 text-primary"
+                              : "bg-bg-light text-secondary-text"
+                          }`}
+                        >
+                          {resolvePackageFamily(t) === "muscle_gain"
+                            ? "Muscle gain sheet"
+                            : "Weight loss sheet"}
+                        </span>
                       </span>
                     </button>
                   );
@@ -201,35 +191,46 @@ export function PricingSection() {
               </div>
 
               <p className="mb-4 mt-8 text-sm font-bold uppercase tracking-[0.18em] text-secondary-text">
-                2 · Meals per day
+                2 · Package
               </p>
-              <div className="flex flex-wrap gap-3">
-                {MEALS_OPTIONS.map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setMeals(m)}
-                    className={`h-12 w-16 rounded-xl border-2 text-base font-semibold transition ${
-                      meals === m
-                        ? "border-primary bg-primary/10 text-foreground"
-                        : "border-border-subtle bg-surface text-secondary-text shadow-sm hover:border-foreground/15"
-                    }`}
-                  >
-                    {m}
-                  </button>
-                ))}
+              <div className="grid gap-3 sm:grid-cols-3">
+                {packages.map((pkg) => {
+                  const active = packageCode === pkg.code;
+                  return (
+                    <button
+                      key={pkg.code}
+                      type="button"
+                      onClick={() => setPackageCode(pkg.code)}
+                      className={`min-h-11 rounded-2xl border-2 p-4 text-left transition ${
+                        active
+                          ? "border-primary bg-primary/10"
+                          : "border-border-subtle bg-surface shadow-sm hover:border-foreground/15"
+                      }`}
+                    >
+                      <span className="block text-[0.9375rem] font-semibold text-foreground">
+                        {pkg.title}
+                      </span>
+                      <span className="mt-1 block text-[0.75rem] leading-snug text-secondary-text">
+                        {pkg.summary}
+                      </span>
+                      <span className="mt-2 block text-[0.6875rem] font-bold text-secondary-text">
+                        {pkg.macros.calories} · {pkg.macros.protein} protein
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
 
               <p className="mb-4 mt-8 text-sm font-bold uppercase tracking-[0.18em] text-secondary-text">
                 3 · Programme length
               </p>
               <div className="flex flex-wrap gap-3">
-                {durations.map((d) => (
+                {PACKAGE_DURATION_KEYS.map((d) => (
                   <button
                     key={d}
                     type="button"
                     onClick={() => setDuration(d)}
-                    className={`h-12 rounded-xl border-2 px-5 text-base font-semibold transition ${
+                    className={`h-12 min-w-11 rounded-xl border-2 px-5 text-base font-semibold transition ${
                       duration === d
                         ? "border-primary bg-primary/10 text-foreground"
                         : "border-border-subtle bg-surface text-secondary-text shadow-sm hover:border-foreground/15"
@@ -241,32 +242,64 @@ export function PricingSection() {
               </div>
             </div>
 
-            {/* Live quote */}
             <div className="lg:col-span-5">
               <div className="sticky top-24 rounded-[28px] border border-border-subtle bg-emerald-deep p-8 text-white shadow-[0_24px_60px_-24px_rgba(13,33,23,0.5)]">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold-soft">
-                  Your price
+                  Your package
                 </p>
                 <p className="font-heading mt-3 text-lg font-semibold leading-snug">
-                  {plan?.title ?? "—"}
+                  {plan?.title ?? "—"} · {selectedPkg?.title ?? "—"}
                 </p>
                 <p className="mt-1 text-sm text-white/60">
-                  {meals} meals/day · {quote ? `${quote.days} days` : "—"}
-                  {plan && caloriesFor(plan)
-                    ? ` · ~${caloriesFor(plan)!.toLocaleString()} kcal/day`
-                    : ""}
-                </p>
-
-                <p className="font-heading mt-6 text-5xl font-semibold tracking-tight">
-                  {quote ? formatMajorUnits(quote.total, currency) : "—"}
+                  {quote ? `${quote.summary} · ${quote.days} days` : "—"}
                 </p>
                 {quote ? (
-                  <p className="mt-2 text-sm text-white/60">
-                    {formatMajorUnits(Math.round(quote.perDay), currency)}/day ·{" "}
-                    {formatMajorUnits(Math.round(quote.perMeal), currency)}/meal ·
-                    free delivery
+                  <p className="mt-2 text-sm text-white/55">
+                    {quote.macros.calories} · {quote.macros.protein} protein ·{" "}
+                    {quote.macros.carbs} carbs · {quote.macros.fat} fat
                   </p>
                 ) : null}
+
+                {quote?.compare ? (
+                  <div className="mt-6">
+                    <p className="text-sm text-white/55">
+                      <span className="line-through decoration-white/50">
+                        {formatMajorUnits(quote.compare.listAed, currency, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        })}
+                      </span>
+                    </p>
+                    <p className="font-heading text-5xl font-semibold tracking-tight text-gold-soft">
+                      {formatMajorUnits(quote.compare.saleAed, currency, {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      })}
+                    </p>
+                    <p className="mt-2 text-sm text-white/60">
+                      Weekly{" "}
+                      <span className="line-through decoration-white/40">
+                        {formatMajorUnits(quote.compare.weeklyListAed, currency, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        })}
+                      </span>{" "}
+                      <span className="font-semibold text-gold-soft">
+                        {formatMajorUnits(quote.compare.weeklySaleAed, currency, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        })}
+                      </span>
+                      {" · "}
+                      {formatMajorUnits(Math.round(quote.perDay), currency)}/day ·
+                      free delivery
+                    </p>
+                  </div>
+                ) : (
+                  <p className="font-heading mt-6 text-5xl font-semibold tracking-tight">
+                    —
+                  </p>
+                )}
 
                 <Link
                   href="/plans"

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -12,15 +12,27 @@ import { PlanPreviewModal } from "@/components/PlanPreviewModal";
 import { iconForTemplate } from "@/lib/mealPlanTemplateDisplay";
 import { TRIAL_PLAN, resolveTrialTemplateId } from "@/lib/trialPlan";
 import {
-  collectRawDurationKeysFromPricing,
   daysForDurationKey,
   isPlanDurationDayKey,
   planDurationListTitle,
-  supportedDurationKeysPresent,
+  PLAN_DURATION_DAY_KEYS,
 } from "@/lib/mealPlanDurationTiers";
 import {
+  buildPriceCompare,
+  getPackagesForFamily,
+  mealSlotsForPackage,
+  packageAllowsPmAddOn,
+  packagePriceAed,
+  pmMealAddOnAed,
+  resolvePackageFamily,
+  soupAddOnAed,
+  type PackageAddOn,
+  type PackageCode,
+  type PackageFamily,
+} from "@/lib/nutrichefPackages";
+import { PriceCompareSummary } from "@/components/plans/PriceCompareSummary";
+import {
   COOLER_BAG_FEE_AED,
-  MEAL_SLOT_OPTIONS,
   OUTSIDE_DUBAI_FEE_AED,
   UAE_EMIRATES,
   WEEKDAYS,
@@ -100,15 +112,16 @@ const FALLBACK_PLAN_TYPES: PlanType[] = [
   { id: "glp1", title: "GLP-1 Support", desc: "High-protein plates for GLP-1 support", emoji: "⚖️", style: "default" },
 ];
 
-const DEFAULT_MEAL_SLOTS: MealSlotId[] = ["breakfast", "lunch", "dinner"];
-const MIN_MEALS = 2;
+const DEFAULT_PACKAGE: PackageCode = "A";
 
-const FALLBACK_CYCLES: Cycle[] = [
-  { id: "20", title: "20 days", subtext: "Programme length", priceDisplay: "—", save: null, amount: 0 },
-  { id: "24", title: "24 days", subtext: "Programme length", priceDisplay: "—", save: null, amount: 0 },
-  { id: "30", title: "30 days", subtext: "Programme length", priceDisplay: "—", save: null, amount: 0 },
-  { id: "90", title: "90 days", subtext: "Programme length", priceDisplay: "—", save: null, amount: 0 },
-];
+const FALLBACK_CYCLES: Cycle[] = PLAN_DURATION_DAY_KEYS.map((id) => ({
+  id,
+  title: `${id} days`,
+  subtext: "Programme length",
+  priceDisplay: "—",
+  save: null,
+  amount: 0,
+}));
 
 const PLANS_SUB_BANNER_DISMISSED_KEY = "nutrichef_plans_sub_banner_dismissed";
 
@@ -165,73 +178,41 @@ function buildPlanDescription(goalType?: string, dietType?: string): string {
   return goal || diet || "Customized meal plan";
 }
 
-/**
- * Per-slot prices are stored as `perMealRate × days`. Total = sum of the chosen slots;
- * a slot without its own price uses the first priced of lunch / breakfast / dinner (same rule as the server).
- */
-function planPriceForDuration(
-  pricing: NonNullable<BackendPlan["pricing"]>,
-  dur: string,
-  slots: readonly MealSlotId[]
-): number | null {
-  const priceOf = (slot: string): number | null => {
-    const v = (pricing as Record<string, Record<string, number> | undefined>)[slot]?.[dur];
-    return v != null && v > 0 ? v : null;
-  };
-  const fallback = priceOf("lunch") ?? priceOf("breakfast") ?? priceOf("dinner");
-  let total = 0;
-  for (const slot of slots) {
-    const v = priceOf(slot) ?? fallback;
-    if (v == null) return null;
-    total += v;
-  }
-  return slots.length ? total : null;
-}
-
-function buildCycles(
-  pricing: BackendPlan["pricing"],
-  slots: readonly MealSlotId[],
-  currency: string
-): { cycles: Cycle[]; unsupportedLegacyOnly: boolean } {
-  const mealsPerDay = Math.max(1, slots.length);
-  if (!pricing) {
-    return { cycles: FALLBACK_CYCLES, unsupportedLegacyOnly: false };
-  }
-
-  const raw = collectRawDurationKeysFromPricing(pricing, ["breakfast", "lunch", "dinner"]);
-  const sorted = supportedDurationKeysPresent(raw);
-
-  if (sorted.length === 0) {
-    if (raw.size > 0) {
-      return { cycles: [], unsupportedLegacyOnly: true };
-    }
-    return { cycles: FALLBACK_CYCLES, unsupportedLegacyOnly: false };
-  }
-
+function buildPackageCycles(
+  family: PackageFamily,
+  packageCode: PackageCode,
+  addOns: readonly PackageAddOn[],
+  currency: string,
+): Cycle[] {
   const cycles: Cycle[] = [];
-  for (const dur of sorted) {
-    const total = planPriceForDuration(pricing, dur, slots);
+  for (const dur of PLAN_DURATION_DAY_KEYS) {
+    const base = packagePriceAed(family, packageCode, Number(dur));
     const days = daysForDurationKey(dur);
-    if (total == null || days == null) continue;
-    const perMeal = total / (mealsPerDay * days);
+    if (base == null || days == null) continue;
+    let total = base;
+    if (addOns.includes("pm_meal") && packageAllowsPmAddOn(packageCode)) {
+      const pm = pmMealAddOnAed(family, Number(dur));
+      if (pm == null) continue;
+      total += pm;
+    }
+    if (addOns.includes("soup")) {
+      const soup = soupAddOnAed(family);
+      if (soup == null) continue;
+      total += soup;
+    }
     cycles.push({
       id: dur,
       title: planDurationListTitle(dur),
-      subtext: `${formatMajorUnits(total, currency)} for ${days} days`,
-      priceDisplay: `${formatMajorUnits(perMeal, currency, {
+      subtext: `${formatMajorUnits(total, currency)} package`,
+      priceDisplay: formatMajorUnits(total, currency, {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
-      })}/meal`,
+      }),
       save: null,
       amount: Math.round(total * 100),
     });
   }
-
-  if (cycles.length === 0) {
-    return { cycles: [], unsupportedLegacyOnly: true };
-  }
-
-  return { cycles, unsupportedLegacyOnly: false };
+  return cycles.length > 0 ? cycles : FALLBACK_CYCLES;
 }
 
 export default function PlansPage() {
@@ -243,8 +224,8 @@ export default function PlansPage() {
   const [backendPlans, setBackendPlans] = useState<BackendPlan[]>([]);
   const [planTypes, setPlanTypes] = useState<PlanType[]>(FALLBACK_PLAN_TYPES);
   const [selectedPlan, setSelectedPlan] = useState("");
-  const [mealSlots, setMealSlots] = useState<MealSlotId[]>(DEFAULT_MEAL_SLOTS);
-  const mealsPerDay = mealSlots.length;
+  const [packageCode, setPackageCode] = useState<PackageCode>(DEFAULT_PACKAGE);
+  const [addOns, setAddOns] = useState<PackageAddOn[]>([]);
   const [startDate, setStartDate] = useState<string>(() => tomorrowInput());
   const [offDays, setOffDays] = useState<number[]>([]);
   const [address, setAddress] = useState<DeliveryAddressDraft>(EMPTY_ADDRESS);
@@ -255,9 +236,8 @@ export default function PlansPage() {
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [selectedCycle, setSelectedCycle] = useState("");
+  const [selectedCycle, setSelectedCycle] = useState("20");
   const [cycles, setCycles] = useState<Cycle[]>(FALLBACK_CYCLES);
-  const [unsupportedDurationTiers, setUnsupportedDurationTiers] = useState(false);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [trialCheckoutLoading, setTrialCheckoutLoading] = useState(false);
@@ -350,26 +330,40 @@ export default function PlansPage() {
     }
   };
 
+  const selectedBackendPlan = backendPlans.find((p) => p._id === selectedPlan);
+  const packageFamily = resolvePackageFamily({
+    title: selectedBackendPlan?.title ?? planTypes.find((p) => p.id === selectedPlan)?.title,
+    goalType: selectedBackendPlan?.goalType,
+    dietType: selectedBackendPlan?.dietType,
+  });
+  const packageOptions = getPackagesForFamily(packageFamily);
+  const selectedPackage = packageOptions.find((p) => p.code === packageCode) ?? packageOptions[0];
+  const mealSlots = useMemo(
+    () => mealSlotsForPackage(packageFamily, packageCode, addOns) as MealSlotId[],
+    [packageFamily, packageCode, addOns],
+  );
+  const mealsPerDay = mealSlots.length;
+  const soupAvailable = soupAddOnAed(packageFamily) != null;
+  const pmAvailable = packageAllowsPmAddOn(packageCode);
+
   useEffect(() => {
-    const plan = backendPlans.find((p) => p._id === selectedPlan);
-    if (!plan?.pricing) {
-      setCycles(FALLBACK_CYCLES);
-      setUnsupportedDurationTiers(false);
-      if (!FALLBACK_CYCLES.find((cy) => cy.id === selectedCycle)) {
-        setSelectedCycle(FALLBACK_CYCLES[0]?.id ?? "");
-      }
-      return;
-    }
-    const { cycles: c, unsupportedLegacyOnly } = buildCycles(plan.pricing, mealSlots, currency);
+    // Drop add-ons that the new package / family cannot sell.
+    setAddOns((prev) =>
+      prev.filter((a) => {
+        if (a === "pm_meal") return packageAllowsPmAddOn(packageCode);
+        if (a === "soup") return soupAddOnAed(packageFamily) != null;
+        return false;
+      }),
+    );
+  }, [packageCode, packageFamily]);
+
+  useEffect(() => {
+    const c = buildPackageCycles(packageFamily, packageCode, addOns, currency);
     setCycles(c);
-    setUnsupportedDurationTiers(unsupportedLegacyOnly);
     if (c.length > 0 && !c.find((cy) => cy.id === selectedCycle)) {
       setSelectedCycle(c[0].id);
     }
-    if (c.length === 0) {
-      setSelectedCycle("");
-    }
-  }, [selectedPlan, mealSlots, backendPlans, selectedCycle, currency]);
+  }, [packageFamily, packageCode, addOns, currency, selectedCycle]);
 
   useEffect(() => {
     setAddress(loadSavedAddress());
@@ -383,7 +377,7 @@ export default function PlansPage() {
   const outsideDubai = address.emirate !== "Dubai";
 
   useEffect(() => {
-    if (!isAuthenticated || !isBackendPlan || !durationDays || mealSlots.length < MIN_MEALS || !startDate || startOnOffDay) {
+    if (!isAuthenticated || !isBackendPlan || !durationDays || !packageCode || !startDate || startOnOffDay) {
       setQuote(null);
       setQuoteError(null);
       return;
@@ -396,6 +390,8 @@ export default function PlansPage() {
           templateId: selectedPlan,
           durationDays,
           mealSlots,
+          packageCode,
+          ...(addOns.length ? { addOns } : {}),
           startDate,
           offDays,
           address: { emirate: address.emirate },
@@ -425,6 +421,8 @@ export default function PlansPage() {
     selectedPlan,
     durationDays,
     mealSlots,
+    packageCode,
+    addOns,
     startDate,
     startOnOffDay,
     offDays,
@@ -458,14 +456,8 @@ export default function PlansPage() {
     };
   }, [isAuthenticated, backendPlans, selectedPlan, address.emirate]);
 
-  const toggleSlot = (slot: MealSlotId) => {
-    setMealSlots((prev) => {
-      if (prev.includes(slot)) {
-        return prev.length <= MIN_MEALS ? prev : prev.filter((s) => s !== slot);
-      }
-      const order = MEAL_SLOT_OPTIONS.map((o) => o.id);
-      return [...prev, slot].sort((a, b) => order.indexOf(a) - order.indexOf(b));
-    });
+  const toggleAddOn = (addOn: PackageAddOn) => {
+    setAddOns((prev) => (prev.includes(addOn) ? prev.filter((a) => a !== addOn) : [...prev, addOn]));
   };
 
   const toggleOffDay = (day: number) => {
@@ -504,10 +496,10 @@ export default function PlansPage() {
 
     const problem = !isBackendPlan
       ? "Please pick a plan above."
-      : !durationDays
-        ? "Please pick a plan duration."
-        : mealSlots.length < MIN_MEALS
-          ? `Choose at least ${MIN_MEALS} meals.`
+      : !packageCode
+        ? "Please pick Plan A, B, or C."
+        : !durationDays
+          ? "Please pick a plan duration."
           : !startDate || startDate < tomorrowInput()
             ? "Choose a start date from tomorrow."
             : startOnOffDay
@@ -538,6 +530,8 @@ export default function PlansPage() {
           planType: "standard",
           durationDays,
           mealSlots,
+          packageCode,
+          ...(addOns.length ? { addOns } : {}),
           startDate,
           offDays,
           address: {
@@ -995,65 +989,90 @@ export default function PlansPage() {
               )}
             </section>
 
-            {/* Section 2: Which meals (price = sum of chosen meal slots × days) */}
+            {/* Section 2: Package A / B / C */}
             <section>
               <h2 className="font-heading mb-2 text-[26px] font-semibold tracking-tight text-foreground">
-                Which meals do you want each day?
+                Choose your package
               </h2>
               <p className="mb-6 text-[14px] font-medium text-secondary-text">
-                Pick at least {MIN_MEALS}. You have {mealsPerDay} meals a day.
+                {packageFamily === "muscle_gain"
+                  ? "Muscle gain sheet — Plan A, B, or C with macros built for strength."
+                  : "Weight loss / GLP-1 / PCOS / diabetic sheet — Plan A, B, or C."}{" "}
+                Includes detox water.
               </p>
-              <div className="grid grid-cols-2 gap-[14px] sm:grid-cols-3" role="group" aria-label="Meals each day">
-                {MEAL_SLOT_OPTIONS.map((slot) => {
-                  const isActive = mealSlots.includes(slot.id);
-                  const locked = isActive && mealSlots.length <= MIN_MEALS;
+              <div className="grid gap-[14px] sm:grid-cols-3" role="radiogroup" aria-label="Package">
+                {packageOptions.map((pkg) => {
+                  const isActive = packageCode === pkg.code;
                   return (
                     <button
-                      key={slot.id}
+                      key={pkg.code}
                       type="button"
-                      aria-pressed={isActive}
-                      onClick={() => toggleSlot(slot.id)}
-                      title={locked ? `Keep at least ${MIN_MEALS} meals` : undefined}
-                      className={`flex min-h-[56px] cursor-pointer items-center justify-between gap-3 rounded-[16px] border-2 px-5 py-4 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                      role="radio"
+                      aria-checked={isActive}
+                      onClick={() => setPackageCode(pkg.code)}
+                      className={`flex min-h-11 flex-col rounded-[16px] border-2 px-5 py-4 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                         isActive
                           ? "border-primary bg-primary/10"
                           : "border-border-subtle bg-surface shadow-sm hover:border-foreground/15"
                       }`}
                     >
-                      <span className="text-[15px] font-semibold text-foreground">{slot.label}</span>
-                      <span
-                        aria-hidden
-                        className={`flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center rounded-md border-2 ${
-                          isActive ? "border-primary bg-primary text-white" : "border-border-subtle bg-surface"
-                        }`}
-                      >
-                        {isActive ? (
-                          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        ) : null}
+                      <span className="text-[15px] font-semibold text-foreground">{pkg.title}</span>
+                      <span className="mt-1 text-[12px] font-medium leading-snug text-secondary-text">
+                        {pkg.summary}
+                      </span>
+                      <span className="mt-2 text-[11px] font-bold text-secondary-text">
+                        {pkg.macros.calories} · {pkg.macros.protein} protein
                       </span>
                     </button>
                   );
                 })}
               </div>
+
+              {(pmAvailable || soupAvailable) && (
+                <div className="mt-6">
+                  <p className="mb-3 text-[13px] font-semibold text-foreground">Add-ons</p>
+                  <div className="flex flex-wrap gap-3">
+                    {pmAvailable ? (
+                      <button
+                        type="button"
+                        aria-pressed={addOns.includes("pm_meal")}
+                        onClick={() => toggleAddOn("pm_meal")}
+                        className={`min-h-11 rounded-full border-2 px-4 text-[13px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                          addOns.includes("pm_meal")
+                            ? "border-primary bg-primary/10 text-foreground"
+                            : "border-border-subtle bg-surface text-secondary-text"
+                        }`}
+                      >
+                        Evening snack
+                        {durationDays && pmMealAddOnAed(packageFamily, durationDays) != null
+                          ? ` · +AED ${pmMealAddOnAed(packageFamily, durationDays)}`
+                          : ""}
+                      </button>
+                    ) : null}
+                    {soupAvailable ? (
+                      <button
+                        type="button"
+                        aria-pressed={addOns.includes("soup")}
+                        onClick={() => toggleAddOn("soup")}
+                        className={`min-h-11 rounded-full border-2 px-4 text-[13px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                          addOns.includes("soup")
+                            ? "border-primary bg-primary/10 text-foreground"
+                            : "border-border-subtle bg-surface text-secondary-text"
+                        }`}
+                      >
+                        Soup · +AED {soupAddOnAed(packageFamily)}
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              )}
             </section>
 
-            {/* Section 4: Plan duration (API tiers: 7 / 14 / 28 days) */}
+            {/* Section 3: Plan duration 20 / 24 / 28 */}
             <section>
               <h2 className="font-heading mb-[26px] text-[26px] font-semibold tracking-tight text-foreground">
                 Plan duration
               </h2>
-              {unsupportedDurationTiers ? (
-                <p
-                  className="mb-6 rounded-2xl border border-amber-200/80 bg-amber-50 px-4 py-3 text-[13px] font-medium leading-relaxed text-amber-950"
-                  role="status"
-                >
-                  This plan&apos;s pricing is still on an older format we no longer support here. Please refresh
-                  later or pick another plan. Once plans are re-saved in admin, the 20, 24, 30, and 90-day
-                  programmes will appear.
-                </p>
-              ) : null}
               <div className="mb-[24px] flex flex-col gap-[18px]">
                 {cycles.map((cycle) => {
                   const isActive = selectedCycle === cycle.id;
@@ -1061,7 +1080,7 @@ export default function PlansPage() {
                     <div
                       key={cycle.id}
                       onClick={() => setSelectedCycle(cycle.id)}
-                      className={`flex cursor-pointer items-center justify-between rounded-[16px] border-2 px-6 py-5 transition-colors ${
+                      className={`flex min-h-11 cursor-pointer items-center justify-between rounded-[16px] border-2 px-6 py-5 transition-colors ${
                         isActive
                           ? "border-primary bg-primary/10"
                           : "border-border-subtle bg-surface shadow-sm hover:border-foreground/15"
@@ -1265,7 +1284,7 @@ export default function PlansPage() {
                     Your package, your way
                   </h3>
                   <p className="text-[13.5px] font-semibold leading-[1.6] text-secondary-text">
-                    {getSelectedPlanTitle()}, {mealsPerDay} meals/day
+                    {getSelectedPlanTitle()}, {selectedPackage?.title ?? "Plan"} · {mealsPerDay} slots/day
                     {selectedCycle ? `, ${getCurrentCycle()?.title ?? ""}` : ""}
                   </p>
                 </div>
@@ -1393,23 +1412,42 @@ export default function PlansPage() {
                     <span className="text-[13px] font-semibold text-foreground">Free</span>
                   </div>
                 ) : null}
-                <div className="flex items-center justify-between border-t border-border-subtle pt-[18px]">
-                  <span className="font-heading text-[16px] font-semibold tracking-tight text-foreground">
-                    Total
-                  </span>
-                  <span className="font-heading text-[16px] font-semibold tracking-tight text-foreground" aria-live="polite">
-                    {quote
-                      ? formatMinorUnits(quote.totalMinor, currency)
-                      : getCurrentCycle()
-                        ? formatMinorUnits(
-                            (getCurrentCycle()?.amount ?? 0) +
-                              (outsideDubai ? OUTSIDE_DUBAI_FEE_AED * 100 : 0) +
-                              (bagType === "cooler" ? COOLER_BAG_FEE_AED * 100 : 0),
-                            currency
-                          )
-                        : "--"}
-                  </span>
-                </div>
+                {(() => {
+                  const planMinor =
+                    quote?.lines.find((l) => l.code === "plan")?.amountMinor ??
+                    getCurrentCycle()?.amount ??
+                    0;
+                  const compare =
+                    durationDays && planMinor > 0
+                      ? buildPriceCompare(planMinor / 100, durationDays)
+                      : null;
+                  if (!compare) {
+                    return (
+                      <div className="flex items-center justify-between border-t border-border-subtle pt-[18px]">
+                        <span className="font-heading text-[16px] font-semibold tracking-tight text-foreground">
+                          Total
+                        </span>
+                        <span className="font-heading text-[16px] font-semibold tracking-tight text-foreground">
+                          --
+                        </span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="border-t border-border-subtle pt-[18px]" aria-live="polite">
+                      <PriceCompareSummary compare={compare} currency={currency} />
+                      {quote && quote.totalMinor !== planMinor ? (
+                        <p className="mt-3 text-right text-[12px] font-semibold text-secondary-text">
+                          Payable now{" "}
+                          <span className="text-foreground">
+                            {formatMinorUnits(quote.totalMinor, currency)}
+                          </span>
+                          {outsideDubai || bagType === "cooler" ? " (incl. fees)" : ""}
+                        </p>
+                      ) : null}
+                    </div>
+                  );
+                })()}
                 {quoteLoading ? (
                   <p className="text-[12px] font-medium text-secondary-text">Updating price…</p>
                 ) : quoteError ? (
@@ -1433,7 +1471,7 @@ export default function PlansPage() {
                 type="button"
                 onClick={handleCheckout}
                 disabled={checkoutLoading || !selectedCycle}
-                className="w-full rounded-full bg-primary py-[16px] text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:bg-primary/60"
+                className="hidden w-full rounded-full bg-primary py-[16px] text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:bg-primary/60 lg:block"
               >
                 {checkoutLoading ? "Processing..." : "Continue"}
               </button>
@@ -1450,6 +1488,34 @@ export default function PlansPage() {
         onClose={() => setPreviewPlanId(null)}
         onSelectPlan={(id) => setSelectedPlan(id)}
       />
+
+      {/* Mobile sticky: gift compare + Continue (matches checkout mock) */}
+      {(() => {
+        const planMinor =
+          quote?.lines.find((l) => l.code === "plan")?.amountMinor ??
+          getCurrentCycle()?.amount ??
+          0;
+        const compare =
+          durationDays && planMinor > 0
+            ? buildPriceCompare(planMinor / 100, durationDays)
+            : null;
+        if (!compare) return null;
+        return (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border-subtle bg-surface/95 px-4 py-3 shadow-[0_-8px_30px_rgba(13,33,23,0.12)] backdrop-blur-md lg:hidden">
+            <div className="mx-auto flex max-w-7xl items-center gap-3">
+              <PriceCompareSummary compare={compare} currency={currency} compact className="min-w-0 flex-1" />
+              <button
+                type="button"
+                onClick={handleCheckout}
+                disabled={checkoutLoading || !selectedCycle}
+                className="h-12 min-w-[7.5rem] shrink-0 rounded-xl bg-primary px-4 text-[14px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:bg-primary/60"
+              >
+                {checkoutLoading ? "…" : "Continue"}
+              </button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

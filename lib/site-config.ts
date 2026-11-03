@@ -8,8 +8,12 @@ export const SITE_NAME = "NutriChef";
 /** Brand line used across metadata and hero copy. */
 export const SITE_TAGLINE = "Private-Chef Nutrition, Delivered";
 
-export const STARTING_PRICE_PER_MEAL_AED = 45;
-export const STARTING_PRICE_PER_DAY_AED = 90;
+/** Floor from the Nov 2026 package sheet: Weight Loss Plan A · 20 days · 2 main meals. */
+export const STARTING_PRICE_PER_MEAL_AED = 42;
+/** Floor day rate: Weight Loss Plan A · 20 days (AED 1,699 ÷ 20). */
+export const STARTING_PRICE_PER_DAY_AED = 85;
+/** Lowest full package on the sheet (AED). */
+export const STARTING_PACKAGE_AED = 1699;
 
 export const CONTACT = {
   /** Registered contact entity for the brand. */
