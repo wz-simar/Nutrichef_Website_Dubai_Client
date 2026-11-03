@@ -16,11 +16,11 @@ export const GLP1_MEDICATION_DUBAI_LINKS = [
   },
   {
     anchor: "buyer’s guide to healthy meal plans in Dubai",
-    url: "/best-healthy-meal-subscription-dubai",
+    url: "/blogs/Healthy-Meal-Plan-Buyers-Guide-Dubai",
   },
   {
     anchor: "buyer's guide to healthy meal plans in Dubai",
-    url: "/best-healthy-meal-subscription-dubai",
+    url: "/blogs/Healthy-Meal-Plan-Buyers-Guide-Dubai",
   },
   {
     anchor: "diabetic friendly meal plans in Dubai",

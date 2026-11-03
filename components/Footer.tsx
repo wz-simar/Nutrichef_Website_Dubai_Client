@@ -61,6 +61,10 @@ const resourceLinks = [
     label: "Diabetic Meal Plans Dubai",
   },
   {
+    href: "/blogs/What-to-Eat-on-GLP1-Medication-Dubai",
+    label: "What to Eat on GLP1 Medication Dubai",
+  },
+  {
     href: "/kids-meal-plan-dubai",
     label: "Kids Meal Plan Dubai",
   },
