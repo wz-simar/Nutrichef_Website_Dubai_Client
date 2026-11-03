@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { buildPageMetadata } from "@/lib/metadata";
-import { STARTING_PRICE_PER_MEAL_AED, whatsappLink } from "@/lib/site-config";
+import { STARTING_PACKAGE_AED, STARTING_PRICE_PER_MEAL_AED, whatsappLink } from "@/lib/site-config";
 import { REGIONS } from "@/lib/regions";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Subscribe & Save — Private-Chef Meal Plans from AED 45/Meal | NutriChef",
-  description: `Subscribe to NutriChef and put your nutrition on autopilot. Chef-crafted meals from AED ${STARTING_PRICE_PER_MEAL_AED}/meal across 20, 24, 30 & 90-day programmes. Pause anytime. Delivering across the UAE — KSA, Qatar & Kuwait next.`,
+  title: `Subscribe & Save — Meal Packages from AED ${STARTING_PACKAGE_AED} | NutriChef`,
+  description: `Subscribe to NutriChef and put your nutrition on autopilot. Chef-crafted packages from AED ${STARTING_PACKAGE_AED} (about AED ${STARTING_PRICE_PER_MEAL_AED}/meal) across 20, 24 & 28-day programmes. Pause anytime. Delivering across the UAE — KSA, Qatar & Kuwait next.`,
   path: "/subscribe",
   keywords: [
     "meal plan subscription Dubai",
@@ -24,15 +24,15 @@ const tiers = [
     highlight: false,
   },
   {
-    length: "30 days",
+    length: "24 days",
     label: "The Standard",
-    body: "A full month on retainer — our members' choice.",
+    body: "Just under a month on retainer — our members' choice.",
     highlight: true,
   },
   {
-    length: "90 days",
+    length: "28 days",
     label: "The Transformation",
-    body: "A whole season of done-for-you nutrition.",
+    body: "A full four weeks of done-for-you nutrition.",
     highlight: false,
   },
 ];
@@ -69,8 +69,9 @@ export default function SubscribePage() {
             Put your nutrition on retainer.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/75 sm:text-xl">
-            One decision replaces a thousand small ones. From AED{" "}
-            {STARTING_PRICE_PER_MEAL_AED} a meal, in 20 to 90-day programmes.
+            One decision replaces a thousand small ones. Packages from AED{" "}
+            {STARTING_PACKAGE_AED} — about AED {STARTING_PRICE_PER_MEAL_AED} a
+            meal — in 20, 24, or 28-day programmes.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link

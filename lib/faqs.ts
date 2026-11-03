@@ -1,4 +1,4 @@
-import { STARTING_PRICE_PER_MEAL_AED } from "./site-config";
+import { STARTING_PACKAGE_AED, STARTING_PRICE_PER_MEAL_AED } from "./site-config";
 
 export interface FaqItem {
   question: string;
@@ -13,7 +13,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     question: "How much does a NutriChef meal plan cost in Dubai and the UAE?",
-    answer: `Simple, transparent pricing: AED ${STARTING_PRICE_PER_MEAL_AED} per meal on Fat Loss and AED 50 per meal on every other programme, multiplied by your meals per day (2–5) and programme length (20, 24, 30, or 90 days). A 3-meal, 20-day Fat Loss plan is AED 2,700 — delivery included, no hidden fees, no lock-in. See live pricing at nutrichef.ae/plans.`,
+    answer: `Packages start from AED ${STARTING_PACKAGE_AED} for Weight Loss Plan A (20 days · breakfast + lunch + snack). Choose Plan A, B, or C for 20, 24, or 28 days — Muscle Gain has its own sheet. Delivery included, no hidden fees, no lock-in. From about AED ${STARTING_PRICE_PER_MEAL_AED}/meal. See live pricing at nutrichef.ae/plans.`,
   },
   {
     question: "Which areas does NutriChef deliver to in the UAE?",
