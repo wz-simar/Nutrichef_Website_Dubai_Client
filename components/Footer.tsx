@@ -65,6 +65,10 @@ const resourceLinks = [
     label: "What to Eat on GLP1 Medication Dubai",
   },
   {
+    href: "/blogs/Calorie-and-Macro-Calculator-Dubai",
+    label: "Calorie and Macro Calculator Dubai",
+  },
+  {
     href: "/kids-meal-plan-dubai",
     label: "Kids Meal Plan Dubai",
   },
