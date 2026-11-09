@@ -1,4 +1,5 @@
 import type { BlogPost } from "@/lib/blog/types";
+import { calorieAndMacroCalculatorDubai } from "@/content/blogs/calorie-and-macro-calculator-dubai";
 import { healthyMealPlanBuyersGuideDubai } from "@/content/blogs/healthy-meal-plan-buyers-guide-dubai";
 import { officeMealDeliveryDubai } from "@/content/blogs/office-meal-delivery-dubai";
 import { top5HealthyMealDeliveryServicesInDubai } from "@/content/blogs/top-5-healthy-meal-delivery-services-in-dubai";
@@ -10,6 +11,7 @@ export const BLOG_REGISTRY: Record<string, BlogPost> = {
   [officeMealDeliveryDubai.slug]: officeMealDeliveryDubai,
   [healthyMealPlanBuyersGuideDubai.slug]: healthyMealPlanBuyersGuideDubai,
   [whatToEatOnGlp1MedicationDubai.slug]: whatToEatOnGlp1MedicationDubai,
+  [calorieAndMacroCalculatorDubai.slug]: calorieAndMacroCalculatorDubai,
 };
 
 export const BLOG_SLUGS = Object.keys(BLOG_REGISTRY);
