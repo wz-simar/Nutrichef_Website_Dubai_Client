@@ -24,6 +24,17 @@ export const hero = {
   ],
 };
 
+/** Client-requested YouTube embed for this landing page. */
+export const video = {
+  eyebrow: "Watch",
+  heading: "See how NutriChef delivers healthy food in Dubai",
+  subheading:
+    "A quick look at private-chef nutrition, fresh daily delivery, and how meal plans work day to day.",
+  youtubeId: "aFkzxaaZOAk",
+  youtubeQuery: "si=CLSKx90TbQ_nikoY",
+  iframeTitle: "NutriChef healthy food delivery Dubai — YouTube video",
+};
+
 export const introduction = {
   heading: "Introduction",
   paragraphs: [
