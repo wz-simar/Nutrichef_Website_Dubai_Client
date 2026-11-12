@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HeroSection } from "@/components/landing/healthy-food-delivery-dubai/HeroSection";
+import { VideoSection } from "@/components/landing/healthy-food-delivery-dubai/VideoSection";
 import { GuideSections } from "@/components/landing/healthy-food-delivery-dubai/GuideSections";
 import { FaqSection } from "@/components/landing/healthy-food-delivery-dubai/FaqSection";
 import { FinalVerdictSection } from "@/components/landing/healthy-food-delivery-dubai/FinalVerdictSection";
@@ -49,6 +50,7 @@ export default function HealthyFoodDeliveryDubaiPage() {
       <FaqSchema />
       <div className="flex min-h-screen flex-col">
         <HeroSection />
+        <VideoSection />
         <GuideSections />
         <FaqSection />
         <FinalVerdictSection />
