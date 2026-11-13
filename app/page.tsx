@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HeroSection } from "@/components/home/HeroSection";
+import { VideoSection } from "@/components/home/VideoSection";
 import { HERO_SLIDES } from "@/lib/heroMedia";
 import { MenuPreview } from "@/components/home/MenuPreview";
 import { FeaturesSection } from "@/components/home/FeaturesSection";
@@ -42,6 +43,7 @@ export default function Home() {
         fetchPriority="high"
       />
       <HeroSection />
+      <VideoSection />
       <div className="cv-auto">
         <MenuPreview />
         <FeaturesSection />
