@@ -51,6 +51,13 @@ export const HOME_META = {
   description: `Chef-crafted, nutritionist-signed meal plans delivered to your villa, penthouse, or office across Dubai, Abu Dhabi & Sharjah before 10 AM. 80+ rotating dishes, macros engineered to your goals, pause anytime. From AED ${STARTING_PRICE_PER_MEAL_AED}/meal. Expanding to KSA, Qatar & Kuwait.`,
 } as const;
 
+/** Shared brand YouTube clip (homepage + landing embeds). */
+export const BRAND_YOUTUBE = {
+  id: "aFkzxaaZOAk",
+  query: "si=CLSKx90TbQ_nikoY",
+  iframeTitle: "NutriChef healthy food delivery Dubai — YouTube video",
+} as const;
+
 /** Concierge WhatsApp deep-link with a pre-filled message. */
 export function whatsappLink(message: string): string {
   return `https://wa.me/${CONTACT.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;

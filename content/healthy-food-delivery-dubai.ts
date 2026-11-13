@@ -1,4 +1,4 @@
-import { STARTING_PRICE_PER_MEAL_AED } from "@/lib/site-config";
+import { BRAND_YOUTUBE, STARTING_PRICE_PER_MEAL_AED } from "@/lib/site-config";
 
 export const seo = {
   title: "Healthy Food Delivery Dubai: Meal Plans vs Apps Compared",
@@ -30,9 +30,9 @@ export const video = {
   heading: "See how NutriChef delivers healthy food in Dubai",
   subheading:
     "A quick look at private-chef nutrition, fresh daily delivery, and how meal plans work day to day.",
-  youtubeId: "aFkzxaaZOAk",
-  youtubeQuery: "si=CLSKx90TbQ_nikoY",
-  iframeTitle: "NutriChef healthy food delivery Dubai — YouTube video",
+  youtubeId: BRAND_YOUTUBE.id,
+  youtubeQuery: BRAND_YOUTUBE.query,
+  iframeTitle: BRAND_YOUTUBE.iframeTitle,
 };
 
 export const introduction = {
