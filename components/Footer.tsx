@@ -69,6 +69,14 @@ const resourceLinks = [
     label: "Calorie and Macro Calculator Dubai",
   },
   {
+    href: "/blogs/Meal-Plan-for-Couples-Dubai",
+    label: "Meal Plan for Couples Dubai",
+  },
+  {
+    href: "/blogs/Why-Weight-Loss-Stalls-in-Dubai",
+    label: "Why Weight Loss Stalls in Dubai",
+  },
+  {
     href: "/kids-meal-plan-dubai",
     label: "Kids Meal Plan Dubai",
   },

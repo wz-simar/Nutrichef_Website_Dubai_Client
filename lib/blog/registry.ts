@@ -1,9 +1,11 @@
 import type { BlogPost } from "@/lib/blog/types";
 import { calorieAndMacroCalculatorDubai } from "@/content/blogs/calorie-and-macro-calculator-dubai";
 import { healthyMealPlanBuyersGuideDubai } from "@/content/blogs/healthy-meal-plan-buyers-guide-dubai";
+import { mealPlanForCouplesDubai } from "@/content/blogs/meal-plan-for-couples-dubai";
 import { officeMealDeliveryDubai } from "@/content/blogs/office-meal-delivery-dubai";
 import { top5HealthyMealDeliveryServicesInDubai } from "@/content/blogs/top-5-healthy-meal-delivery-services-in-dubai";
 import { whatToEatOnGlp1MedicationDubai } from "@/content/blogs/what-to-eat-on-glp1-medication-dubai";
+import { whyWeightLossStallsInDubai } from "@/content/blogs/why-weight-loss-stalls-in-dubai";
 
 /** Central registry — add every published blog post here. */
 export const BLOG_REGISTRY: Record<string, BlogPost> = {
@@ -12,6 +14,8 @@ export const BLOG_REGISTRY: Record<string, BlogPost> = {
   [healthyMealPlanBuyersGuideDubai.slug]: healthyMealPlanBuyersGuideDubai,
   [whatToEatOnGlp1MedicationDubai.slug]: whatToEatOnGlp1MedicationDubai,
   [calorieAndMacroCalculatorDubai.slug]: calorieAndMacroCalculatorDubai,
+  [mealPlanForCouplesDubai.slug]: mealPlanForCouplesDubai,
+  [whyWeightLossStallsInDubai.slug]: whyWeightLossStallsInDubai,
 };
 
 export const BLOG_SLUGS = Object.keys(BLOG_REGISTRY);
