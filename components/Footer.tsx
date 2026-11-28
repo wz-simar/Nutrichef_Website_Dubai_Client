@@ -77,6 +77,10 @@ const resourceLinks = [
     label: "Why Weight Loss Stalls in Dubai",
   },
   {
+    href: "/blogs/Meal-Plan-vs-Meal-Kit-Dubai",
+    label: "Meal Plan vs Meal Kit Dubai",
+  },
+  {
     href: "/kids-meal-plan-dubai",
     label: "Kids Meal Plan Dubai",
   },
